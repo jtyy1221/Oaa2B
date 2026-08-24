@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Obsidian as a 2nd Brain — Setup v3.6</title>
+<style>
+:root{--bg:#0f1115;--fg:#e6e6e6;--dim:#9aa0a6;--acc:#ff69b4;--card:#181b22;--code:#12141a;--ok:#2ecc40;--warn:#ffb020}
+@media (prefers-color-scheme: light){:root{--bg:#fafafa;--fg:#1a1a1a;--dim:#666;--card:#fff;--code:#f2f2f4}}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,Segoe UI,sans-serif;max-width:860px;margin:0 auto;padding:2rem 1rem}
+h1{color:var(--acc)} h2{border-bottom:1px solid var(--dim);padding-bottom:.3rem;margin-top:2.2rem}
+code,pre{background:var(--code);border-radius:6px;font:13px/1.5 ui-monospace,Menlo,monospace}
+code{padding:.1rem .35rem} pre{padding:1rem;overflow-x:auto}
+.card{background:var(--card);border-radius:10px;padding:1rem 1.2rem;margin:1rem 0;border-left:4px solid var(--acc)}
+.warn{border-left-color:var(--warn)} .ok{border-left-color:var(--ok)}
+table{border-collapse:collapse;width:100%} td,th{border:1px solid var(--dim);padding:.4rem .6rem;text-align:left;font-size:14px}
+.dim{color:var(--dim)} footer{margin-top:3rem;color:var(--dim);font-size:14px;border-top:1px solid var(--dim);padding-top:1rem}
+</style>
+</head>
+<body>
+
+<h1>🧠 Obsidian as a 2nd Brain</h1>
+<p><b>Setup v3.6</b> — a shared AI memory layer: your Obsidian vault, synced by iCloud to iPhone/iPad, mirrored to a private GitHub repo by an always-on Mac, readable and writable by your AI assistants from any device.</p>
+<p class="dim">Notes live in iCloud. Git history lives outside iCloud. AIs talk to GitHub. Your Mac relays between them — automatically, every few minutes and on every change.</p>
+
+<h2>👤 Human prerequisites — do these first</h2>
+<div class="card">
+<ol>
+<li><b>A Mac that stays on</b> — it is the sync relay. Laptop or desktop, lid may be closed on power, screen may lock, but it must not fully sleep.</li>
+<li><b>iCloud Drive enabled</b> on that Mac (System Settings → Apple ID → iCloud).</li>
+<li><b>Obsidian installed</b> on the Mac (<a href="https://obsidian.md">obsidian.md</a>) and on your iPhone/iPad (App Store). Create a vault choosing <b>"Store in iCloud"</b>, or reuse an existing iCloud vault.</li>
+<li><b>A GitHub account</b> (free is fine) — <a href="https://github.com/signup">github.com/signup</a>.</li>
+<li><b>Claude Code</b> installed and working on the Mac.</li>
+</ol>
+</div>
+
+<h2>🚀 How to run this setup</h2>
+<div class="card ok">
+<p>Paste this single line into Claude Code on your Mac:</p>
+<pre>Fetch https://raw.githubusercontent.com/jKelvin-com/Oaa2B/main/Oaa2B_setup.html and follow its AI-RUNBOOK section to set up "Obsidian as a 2nd Brain" for me.</pre>
+<p class="dim">Claude will interview you for the variables below, then build everything, verifying each step.</p>
+</div>
+
+<h2>🤖 AI-RUNBOOK <span class="dim">(instructions for the AI agent executing this setup)</span></h2>
+
+<div class="card warn"><b>Agent, read first:</b> Execute the phases in order. Verify every step's output before moving on. Ask the human ONLY the interview questions and whenever an action needs their hands (browser logins, System Settings). Never store secrets in files you commit. If any step fails, diagnose before retrying — the Gotchas table at the end contains the known traps and their fixes.</div>
+
+<h3>Phase 0 — Interview the human</h3>
+<p>Ask for, and confirm back, these variables. Use them everywhere below.</p>
+<table>
+<tr><th>Variable</th><th>Meaning</th><th>Example</th></tr>
+<tr><td><code>VAULT_NAME</code></td><td>Obsidian vault folder name (plain ASCII, no symbols)</td><td>Chloe</td></tr>
+<tr><td><code>HOME_NOTE</code></td><td>Name of the single root home note</td><td>CHLOE-bb</td></tr>
+<tr><td><code>REPO_NAME</code></td><td>Private GitHub repo name (letters/digits/hyphens)</td><td>chloe</td></tr>
+<tr><td><code>GITHUB_USER</code></td><td>Their GitHub username</td><td>jKelvin-com</td></tr>
+<tr><td><code>GIT_EMAIL</code></td><td>Email on their GitHub account</td><td>you@example.com</td></tr>
+<tr><td><code>AGENTS</code></td><td>Which AIs will write (subset of: claude, chatgpt, gemini, grok)</td><td>claude, grok</td></tr>
+<tr><td><code>ADDRESS</code></td><td>(optional) How AIs should address them / persona name for the AIs</td><td>—</td></tr>
+<tr><td><code>COLORS</code></td><td>(optional) Graph colors for: home, AI, core, identity, topics, projects</td><td>white, orange, green, blue, yellow, pink</td></tr>
+</table>
+<p>Locate the vault: read <code>~/Library/Application Support/obsidian/obsidian.json</code> for registered vault paths. iCloud vaults live under <code>~/Library/Mobile Documents/iCloud~md~obsidian/Documents/</code> — NOT under com~apple~CloudDocs. If the vault has a non-ASCII or symbol-heavy name, have the human close Obsidian on all devices, rename it (plain ASCII), wait for iCloud to settle, and reopen.</p>
+
+<h3>Phase A — Split the vault from its git history</h3>
+<ol>
+<li>Pin the vault: <code>brctl download "&lt;vault&gt;"</code>; verify zero <code>*.icloud</code> stubs remain; tell the human to right-click the vault in Finder → <b>Keep Downloaded</b>. Do NOT tell them to disable Optimize Mac Storage if their iCloud is bigger than their disk.</li>
+<li>Write <code>.gitignore</code> before anything is tracked:
+<pre>.DS_Store
+.Trash/
+*.icloud
+.iCloud*
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/workspaces.json
+.obsidian/cache
+.obsidian/plugins/*/data.json
+.trash/
+*.tmp
+*.swp</pre></li>
+<li>The core trick — git database OUTSIDE iCloud:
+<pre>cd "&lt;vault&gt;"
+mkdir -p "$HOME/Git"
+git init --separate-git-dir="$HOME/Git/&lt;REPO_NAME&gt;.git" -b main
+cat .git   # MUST print: gitdir: /Users/&lt;user&gt;/Git/&lt;REPO_NAME&gt;.git</pre></li>
+<li>Config: <code>git config user.name / user.email / pull.rebase true / rebase.autoStash true / core.precomposeunicode true</code></li>
+<li>Do NOT install the Obsidian Git plugin — it mishandles gitfiles; the relay below replaces it.</li>
+</ol>
+
+<h3>Phase B — Folder structure (the star)</h3>
+<pre>&lt;HOME_NOTE&gt;.md   ← home note, the ONLY file at root; links to the five hubs
+AI/              ← the ONLY folder AIs may create files in; hub note AI.md
+CORE/            ← CORE.md hub + INSTRUCTIONS.md + heartbeat.md (later)
+IDENTITY/        ← IDENTITY.md hub + one note per persona/context
+TOPICS/          ← TOPICS.md hub + distilled topic notes
+PROJECTS/        ← PROJECTS.md hub + one UPPERCASE subfolder per project
+journal/         ← the human's own writing; AIs read, never write</pre>
+<ul>
+<li>Graph design: two-level star. Home links the five hubs; each hub links its leaves; leaves link nothing. AI notes self-attach by starting with <code>[[AI]]</code>.</li>
+<li>Keep every name plain ASCII. Never prefix a folder with <code>!</code> (breaks .gitattributes) or Windows-invalid characters (<code>&lt; &gt; : " / \ | ? *</code>).</li>
+<li>Write <code>CORE/INSTRUCTIONS.md</code> — the standing law every AI reads. Include: the structure map above marked "follow this every single time"; write rules (AIs create only <code>AI/&lt;agent&gt;-YYYY-MM-DD-HHMM-slug.md</code>, first line <code>[[AI]]</code>, frontmatter <code>tags: [ai]</code>, never edit a file they didn't create, never touch journal/); 409/stale-SHA retry etiquette; artifact rules (source into vault + companion note; hosted URLs are views, not copies; binaries to Drive with a link note); heartbeat-check-before-trust; plus the human's ADDRESS/persona and style preferences from Phase 0.</li>
+<li><code>.gitattributes</code>: <code>AI/**/*.md merge=union</code></li>
+<li>Graph colors: write <code>.obsidian/graph.json</code> colorGroups using tag queries (<code>tag:#ai</code>, <code>tag:#core</code>, <code>tag:#topic</code>, <code>tag:#project</code>, <code>tag:#identity</code>, <code>file:&lt;HOME_NOTE&gt;</code>) with the COLORS chosen in Phase 0. Tag notes accordingly in frontmatter.</li>
+<li>Commit everything.</li>
+</ol>
+
+<h3>Phase C — GitHub</h3>
+<ol>
+<li>Human runs <code>gh auth login</code> in Terminal (GitHub.com → HTTPS → login with browser). If the agent's sandbox cannot see the resulting keychain credential, have the human re-run with <code>gh auth login --insecure-storage</code>.</li>
+<li><code>gh repo create &lt;REPO_NAME&gt; --private</code>, then <code>git remote add origin ... &amp;&amp; git push -u origin main</code>. (Do not rely on <code>gh repo create --source=.</code> — its repo detection can fail with a gitfile.)</li>
+<li>Verify: <code>gh repo view --json visibility</code> MUST print PRIVATE.</li>
+</ol>
+
+<h3>Phase D — The relay</h3>
+<ol>
+<li>Write <code>~/bin/vault-sync.sh</code> with six guards: (1) skip if rebase/merge in flight; (2) skip if <code>*.icloud</code> stubs present; (3) skip if any .md changed in the last 20 s (excluding the heartbeat); (4) warn on iCloud conflict copies (<code>"* 2.md"</code>); (5) warn under 10 GB free disk; (6) write <code>CORE/heartbeat.md</code> hourly when healthy and immediately on any warning, with <code>last_sync</code> and <code>warnings</code> in frontmatter. Then: <code>git add -A</code>, commit if changes, <code>git pull --rebase --autostash</code>, <code>git push</code>. Run it by hand once; verify exit 0 and the heartbeat on GitHub.</li>
+<li>LaunchAgent <code>~/Library/LaunchAgents/com.&lt;user&gt;.vaultsync.plist</code>: <code>StartInterval</code> 180, <code>RunAtLoad</code> true, <code>ThrottleInterval</code> 30, <code>WatchPaths</code> on the vault root and each top-level folder (WatchPaths is not recursive — deep changes are caught by the timer). stdout/err to <code>/tmp/vaultsync.log|err</code>. <code>launchctl bootstrap gui/$(id -u) ...</code> then <code>kickstart</code>.</li>
+<li><b>Expect the first launchd run to fail with "not a repo"</b> — that is macOS privacy (TCC) blocking launchd's zsh from iCloud Drive. Fix: human adds <code>/bin/zsh</code> to System Settings → Privacy &amp; Security → <b>Full Disk Access</b> (in the file picker press <code>/</code> to type the path, or ⌘⇧. to show hidden folders). Kickstart again; expect exit 0.</li>
+<li>Keep the Mac awake: <code>sudo pmset -a sleep 0</code> (human runs it; display sleep is fine, system sleep is not). Warn them: after any reboot the relay is dead until login — the heartbeat exposes this.</li>
+<li>End-to-end test: create a test note, wait ~60 s, verify it on GitHub via <code>gh api</code>, then delete it.</li>
+</ol>
+
+<h3>Phase E — Connect the AIs (human does these in each app)</h3>
+<table>
+<tr><th>AI</th><th>How</th><th>Phone?</th></tr>
+<tr><td>Claude</td><td>claude.ai → Settings → Connectors → GitHub → OAuth → only select &lt;REPO_NAME&gt;. Toggle on per chat (+ menu).</td><td>Web/PWA yes; native app UI still rolling out</td></tr>
+<tr><td>Grok</td><td>grok.com or app → Settings → Connectors → GitHub</td><td>✅ best native mobile support</td></tr>
+<tr><td>ChatGPT</td><td>Developer mode → custom MCP connector, URL <code>https://api.githubcopilot.com/mcp/</code>, header <code>Authorization: Bearer &lt;fine-grained PAT&gt;</code> (Contents R/W, one repo). Skip unless wanted — the PAT expires and cannot auto-renew.</td><td>not guaranteed</td></tr>
+<tr><td>Gemini</td><td>The consumer app cannot use custom MCP. Skip, or use Gemini CLI later.</td><td>❌</td></tr>
+</table>
+<p>Into each connected AI's custom instructions, one line: <i>"Read CORE/INSTRUCTIONS.md in the &lt;GITHUB_USER&gt;/&lt;REPO_NAME&gt; GitHub repo at the start of every conversation and obey it."</i></p>
+<p>Test each AI with: <i>"Read CORE/heartbeat.md from the repo — is the relay alive?"</i> Correct answer cites a <code>last_sync</code> under 2 hours old.</p>
+
+<h3>Phase F — Install a doctor</h3>
+<p>Create a local Claude Code skill (<code>~/.claude/skills/vault-doctor-&lt;VAULT_NAME&gt;/SKILL.md</code>) that knows this vault's exact paths and checks: heartbeat freshness, iCloud conflict copies, evicted stubs, gitfile integrity, <code>git fsck</code> (recovery = re-clone, never hand-repair), relay agent status, disk headroom, AI-note sprawl, star hygiene. Include a weekly reconcile mode: fold durable facts from <code>AI/</code> into TOPICS/PROJECTS/IDENTITY, link new notes from their hub, delete ephemera, one writer per session.</p>
+
+<h3>⚠️ Gotchas learned the hard way</h3>
+<table>
+<tr><th>Symptom</th><th>Cause → Fix</th></tr>
+<tr><td>launchd job logs "not a repo", manual run works</td><td>TCC blocks launchd zsh from iCloud Drive → Full Disk Access for /bin/zsh</td></tr>
+<tr><td>Agent's <code>gh</code> says logged out after successful login</td><td>Token in macOS keychain, invisible to sandboxes → <code>gh auth login --insecure-storage</code></td></tr>
+<tr><td><code>gh repo create --source=.</code>: "not a git repository"</td><td>gh's detection fails on gitfiles → create repo bare, add remote, push manually</td></tr>
+<tr><td>.gitattributes rule silently ignored</td><td>Line starts with <code>!</code> (negation) → never name folders with a leading !</td></tr>
+<tr><td>Note committed as a stub / placeholder</td><td>iCloud evicted it → guard 2 + Keep Downloaded + ≥10 GB free</td></tr>
+<tr><td>"Meeting 2.md" duplicates appearing</td><td>iCloud conflict copies → guard 4 warns; diff, keep richer, delete copy</td></tr>
+<tr><td>Same accented filename appears twice</td><td>NFC/NFD mismatch → <code>core.precomposeunicode true</code> + plain ASCII names</td></tr>
+<tr><td>Everything breaks at once, "network errors"</td><td>A PAT expired → prefer OAuth connectors; if using a PAT, calendar its expiry</td></tr>
+<tr><td>Vault stops being a repo after user rename</td><td>gitfile stores an absolute path → rewrite <code>&lt;vault&gt;/.git</code> with the new gitdir line</td></tr>
+</table>
+
+<footer>
+<b>Obsidian as a 2nd Brain</b> · Setup v3.6 · verified end-to-end on macOS, August 2026<br>
+Credits: <a href="https://jkelvin.com">jKelvin.com</a> · Built and battle-tested with Claude Code · Share freely 🧠
+</footer>
+</body>
+</html>
