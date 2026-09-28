@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Obsidian as a 2nd Brain — Setup v3.6</title>
+<title>Obsidian as a 2nd Brain, Setup v4.0</title>
 <style>
 :root{--bg:#0f1115;--fg:#e6e6e6;--dim:#9aa0a6;--acc:#ff69b4;--card:#181b22;--code:#12141a;--ok:#2ecc40;--warn:#ffb020}
 @media (prefers-color-scheme: light){:root{--bg:#fafafa;--fg:#1a1a1a;--dim:#666;--card:#fff;--code:#f2f2f4}}
@@ -20,16 +20,26 @@ table{border-collapse:collapse;width:100%} td,th{border:1px solid var(--dim);pad
 <body>
 
 <h1>🧠 Obsidian as a 2nd Brain</h1>
-<p><b>Setup v3.6</b> — a shared AI memory layer: your Obsidian vault, synced by iCloud to iPhone/iPad, mirrored to a private GitHub repo by an always-on Mac, readable and writable by your AI assistants from any device.</p>
-<p class="dim">Notes live in iCloud. Git history lives outside iCloud. AIs talk to GitHub. Your Mac relays between them — automatically, every few minutes and on every change.</p>
+<p><b>Setup v4.0</b>: a shared AI memory layer that several AIs read and write together. One master copy of your notes, version history on a private GitHub repo, and an Obsidian graph you can open on Mac, iPhone and iPad.</p>
 
-<h2>👤 Human prerequisites — do these first</h2>
+<h2>🧭 Choose your master</h2>
+<table>
+<tr><th></th><th>🟢 Google Drive master (recommended, new in v4)</th><th>🍎 iCloud master (classic, v3.6)</th></tr>
+<tr><td>Where notes live</td><td>A Drive folder, kept offline on the Mac by Google Drive for Desktop</td><td>The Obsidian vault in iCloud</td></tr>
+<tr><td>How AIs reach it</td><td>Drive connectors (Claude and others) plus GitHub</td><td>GitHub only</td></tr>
+<tr><td>Where git runs</td><td>A shadow clone on local disk, never inside a cloud folder</td><td>A git database outside iCloud (<code>--separate-git-dir</code>)</td></tr>
+<tr><td>Obsidian graph</td><td>A one-way copy into the iCloud Obsidian folder, a view only</td><td>The vault itself</td></tr>
+<tr><td>Why pick it</td><td>More AIs connect to Drive natively, Drive keeps file IDs stable, and a cloud edit can never corrupt git</td><td>Fewer moving parts if every AI you use speaks GitHub</td></tr>
+</table>
+<p class="dim">Both options share the same structure: ten departments in a tree, generated hubs, raw data kept word for word, and warnings shown as red nodes.</p>
+
+<h2>👤 Human prerequisites, do these first</h2>
 <div class="card">
 <ol>
-<li><b>A Mac that stays on</b> — it is the sync relay. Laptop or desktop, lid may be closed on power, screen may lock, but it must not fully sleep.</li>
-<li><b>iCloud Drive enabled</b> on that Mac (System Settings → Apple ID → iCloud).</li>
-<li><b>Obsidian installed</b> on the Mac (<a href="https://obsidian.md">obsidian.md</a>) and on your iPhone/iPad (App Store). Create a vault choosing <b>"Store in iCloud"</b>, or reuse an existing iCloud vault.</li>
-<li><b>A GitHub account</b> (free is fine) — <a href="https://github.com/signup">github.com/signup</a>.</li>
+<li><b>A Mac that stays on.</b> It is the sync relay. The lid may be closed on power and the screen may lock, but the system must not sleep.</li>
+<li><b>Drive master:</b> <a href="https://www.google.com/drive/download/">Google Drive for Desktop</a> installed, signed in, set to <b>Stream files</b>. <b>iCloud master:</b> iCloud Drive on (System Settings → Apple ID → iCloud).</li>
+<li><b>Obsidian</b> on the Mac (<a href="https://obsidian.md">obsidian.md</a>) and on your iPhone/iPad, with a vault stored in iCloud (for the Drive option this becomes the graph view).</li>
+<li><b>A GitHub account</b>, free is fine: <a href="https://github.com/signup">github.com/signup</a>.</li>
 <li><b>Claude Code</b> installed and working on the Mac.</li>
 </ol>
 </div>
@@ -38,117 +48,152 @@ table{border-collapse:collapse;width:100%} td,th{border:1px solid var(--dim);pad
 <div class="card ok">
 <p>Paste this single line into Claude Code on your Mac:</p>
 <pre>Fetch https://raw.githubusercontent.com/jKelvin-com/Oaa2B/main/Oaa2B_setup.html and follow its AI-RUNBOOK section to set up "Obsidian as a 2nd Brain" for me.</pre>
-<p class="dim">Claude will interview you for the variables below, then build everything, verifying each step.</p>
+<p class="dim">Claude interviews you for the variables below, then builds everything, verifying each step.</p>
 </div>
 
 <h2>🤖 AI-RUNBOOK <span class="dim">(instructions for the AI agent executing this setup)</span></h2>
 
-<div class="card warn"><b>Agent, read first:</b> Execute the phases in order. Verify every step's output before moving on. Ask the human ONLY the interview questions and whenever an action needs their hands (browser logins, System Settings). Never store secrets in files you commit. If any step fails, diagnose before retrying — the Gotchas table at the end contains the known traps and their fixes.</div>
+<div class="card warn"><b>Agent, read first:</b> execute the phases in order and verify every step's output before moving on. Ask the human only the interview questions, and whenever an action needs their hands (browser logins, System Settings, Finder). Never store secrets in files you commit. Never run git inside Google Drive or iCloud. If a step fails, diagnose before retrying; the Gotchas table at the end lists the known traps. Phases marked <b>[Drive]</b> or <b>[iCloud]</b> apply to that master only.</div>
 
-<h3>Phase 0 — Interview the human</h3>
+<h3>Phase 0: Interview the human</h3>
 <p>Ask for, and confirm back, these variables. Use them everywhere below.</p>
 <table>
 <tr><th>Variable</th><th>Meaning</th><th>Example</th></tr>
-<tr><td><code>VAULT_NAME</code></td><td>Obsidian vault folder name (plain ASCII, no symbols)</td><td>Chloe</td></tr>
-<tr><td><code>HOME_NOTE</code></td><td>Name of the single root home note</td><td>CHLOE-bb</td></tr>
-<tr><td><code>REPO_NAME</code></td><td>Private GitHub repo name (letters/digits/hyphens)</td><td>chloe</td></tr>
-<tr><td><code>GITHUB_USER</code></td><td>Their GitHub username</td><td>jKelvin-com</td></tr>
-<tr><td><code>GIT_EMAIL</code></td><td>Email on their GitHub account</td><td>you@example.com</td></tr>
-<tr><td><code>AGENTS</code></td><td>Which AIs will write (subset of: claude, chatgpt, gemini, grok)</td><td>claude, grok</td></tr>
-<tr><td><code>ADDRESS</code></td><td>(optional) How AIs should address them / persona name for the AIs</td><td>—</td></tr>
-<tr><td><code>COLORS</code></td><td>(optional) Graph colors for: home, AI, core, identity, topics, projects</td><td>white, orange, green, blue, yellow, pink</td></tr>
+<tr><td><code>MASTER</code></td><td><code>drive</code> (recommended) or <code>icloud</code></td><td>drive</td></tr>
+<tr><td><code>VAULT_NAME</code></td><td>Vault name, plain ASCII</td><td>Brain</td></tr>
+<tr><td><code>ROOT</code></td><td>[Drive] Top folder in My Drive. It holds <code>1-Vault</code> (notes) and <code>2-Files</code> (binaries)</td><td>brain</td></tr>
+<tr><td><code>HOME_NOTE</code></td><td>The single home note at the root of the graph</td><td>home</td></tr>
+<tr><td><code>REPO_NAME</code></td><td>Private GitHub repo name</td><td>brain</td></tr>
+<tr><td><code>GITHUB_USER</code></td><td>Their GitHub username</td><td>your-user</td></tr>
+<tr><td><code>GIT_EMAIL</code></td><td>Email for commits (the GitHub noreply address is fine)</td><td>you@example.com</td></tr>
+<tr><td><code>AGENTS</code></td><td>Which AIs will write</td><td>claude, grok</td></tr>
+<tr><td><code>DEPARTMENTS</code></td><td>The ten branches (keep 0 and 9, rename 1 to 8 to fit their life)</td><td>see Phase B</td></tr>
+<tr><td><code>ADDRESS</code></td><td>(optional) How the AIs address them, and a shared persona name</td><td>none</td></tr>
 </table>
-<p>Locate the vault: read <code>~/Library/Application Support/obsidian/obsidian.json</code> for registered vault paths. iCloud vaults live under <code>~/Library/Mobile Documents/iCloud~md~obsidian/Documents/</code> — NOT under com~apple~CloudDocs. If the vault has a non-ASCII or symbol-heavy name, have the human close Obsidian on all devices, rename it (plain ASCII), wait for iCloud to settle, and reopen.</p>
 
-<h3>Phase A — Split the vault from its git history</h3>
+<h3>Phase A [Drive]: The master folder and the shadow clone</h3>
 <ol>
-<li>Pin the vault: <code>brctl download "&lt;vault&gt;"</code>; verify zero <code>*.icloud</code> stubs remain; tell the human to right-click the vault in Finder → <b>Keep Downloaded</b>. Do NOT tell them to disable Optimize Mac Storage if their iCloud is bigger than their disk.</li>
-<li>Write <code>.gitignore</code> before anything is tracked:
-<pre>.DS_Store
-.Trash/
-*.icloud
-.iCloud*
-.obsidian/workspace.json
-.obsidian/workspace-mobile.json
-.obsidian/workspaces.json
-.obsidian/cache
-.obsidian/plugins/*/data.json
-.trash/
-*.tmp
-*.swp</pre></li>
-<li>The core trick — git database OUTSIDE iCloud:
-<pre>cd "&lt;vault&gt;"
-mkdir -p "$HOME/Git"
-git init --separate-git-dir="$HOME/Git/&lt;REPO_NAME&gt;.git" -b main
-cat .git   # MUST print: gitdir: /Users/&lt;user&gt;/Git/&lt;REPO_NAME&gt;.git</pre></li>
-<li>Config: <code>git config user.name / user.email / pull.rebase true / rebase.autoStash true / core.precomposeunicode true</code></li>
-<li>Do NOT install the Obsidian Git plugin — it mishandles gitfiles; the relay below replaces it.</li>
+<li>Human creates <code>&lt;ROOT&gt;/1-Vault</code> and <code>&lt;ROOT&gt;/2-Files</code> in My Drive, then right-clicks <code>1-Vault</code> in Finder → <b>Offline access → Available offline</b>.</li>
+<li>The local path is <code>~/Library/CloudStorage/GoogleDrive-&lt;account&gt;/My Drive/&lt;ROOT&gt;/1-Vault</code>. Single-quote it in shell whenever <code>ROOT</code> contains <code>$</code> or <code>~</code>, or build it in Python.</li>
+<li>Verify nothing is a placeholder: <code>find '&lt;vault&gt;' -flags +dataless</code> must print nothing.</li>
+<li>If an existing iCloud vault is being moved in, copy it into <code>1-Vault</code> (no <code>.git</code>, no <code>.obsidian</code>), and keep a tarball backup of the original first.</li>
+<li>Write a random id to <code>9-system/state/vault-id</code> in the vault and to <code>~/&lt;VAULT_NAME&gt;-relay/state/vault-id</code>. The relay refuses to sync if they differ, so it can never sync the wrong folder.</li>
 </ol>
 
-<h3>Phase B — Folder structure (the star)</h3>
-<pre>&lt;HOME_NOTE&gt;.md   ← home note, the ONLY file at root; links to the five hubs
-AI/              ← the ONLY folder AIs may create files in; hub note AI.md
-CORE/            ← CORE.md hub + INSTRUCTIONS.md + heartbeat.md (later)
-IDENTITY/        ← IDENTITY.md hub + one note per persona/context
-TOPICS/          ← TOPICS.md hub + distilled topic notes
-PROJECTS/        ← PROJECTS.md hub + one UPPERCASE subfolder per project
-journal/         ← the human's own writing; AIs read, never write</pre>
-<ul>
-<li>Graph design: two-level star. Home links the five hubs; each hub links its leaves; leaves link nothing. AI notes self-attach by starting with <code>[[AI]]</code>.</li>
-<li>Keep every name plain ASCII. Never prefix a folder with <code>!</code> (breaks .gitattributes) or Windows-invalid characters (<code>&lt; &gt; : " / \ | ? *</code>).</li>
-<li>Write <code>CORE/INSTRUCTIONS.md</code> — the standing law every AI reads. Include: the structure map above marked "follow this every single time"; write rules (AIs create only <code>AI/&lt;agent&gt;-YYYY-MM-DD-HHMM-slug.md</code>, first line <code>[[AI]]</code>, frontmatter <code>tags: [ai]</code>, never edit a file they didn't create, never touch journal/); 409/stale-SHA retry etiquette; artifact rules (source into vault + companion note; hosted URLs are views, not copies; binaries to Drive with a link note); heartbeat-check-before-trust; plus the human's ADDRESS/persona and style preferences from Phase 0.</li>
-<li><code>.gitattributes</code>: <code>AI/**/*.md merge=union</code></li>
-<li>Graph colors: write <code>.obsidian/graph.json</code> colorGroups using tag queries (<code>tag:#ai</code>, <code>tag:#core</code>, <code>tag:#topic</code>, <code>tag:#project</code>, <code>tag:#identity</code>, <code>file:&lt;HOME_NOTE&gt;</code>) with the COLORS chosen in Phase 0. Tag notes accordingly in frontmatter.</li>
-<li>Commit everything.</li>
-</ol>
-
-<h3>Phase C — GitHub</h3>
+<h3>Phase A [iCloud]: Split the vault from its git history</h3>
 <ol>
-<li>Human runs <code>gh auth login</code> in Terminal (GitHub.com → HTTPS → login with browser). If the agent's sandbox cannot see the resulting keychain credential, have the human re-run with <code>gh auth login --insecure-storage</code>.</li>
-<li><code>gh repo create &lt;REPO_NAME&gt; --private</code>, then <code>git remote add origin ... &amp;&amp; git push -u origin main</code>. (Do not rely on <code>gh repo create --source=.</code> — its repo detection can fail with a gitfile.)</li>
-<li>Verify: <code>gh repo view --json visibility</code> MUST print PRIVATE.</li>
+<li>Pin the vault: <code>brctl download "&lt;vault&gt;"</code>, verify zero <code>*.icloud</code> stubs, and have the human right-click the vault in Finder → <b>Keep Downloaded</b>.</li>
+<li>Write <code>.gitignore</code> first: <code>.DS_Store</code>, <code>.Trash/</code>, <code>*.icloud</code>, <code>.iCloud*</code>, <code>.obsidian/workspace*.json</code>, <code>.obsidian/cache</code>, <code>.obsidian/plugins/*/data.json</code>, <code>.trash/</code>, <code>*.tmp</code>, <code>*.swp</code>.</li>
+<li>Git database outside iCloud: <code>git init --separate-git-dir="$HOME/Git/&lt;REPO_NAME&gt;.git" -b main</code>; <code>cat .git</code> must print the gitdir line.</li>
+<li>Config: <code>pull.rebase true</code>, <code>rebase.autoStash true</code>, <code>core.precomposeunicode true</code>. Do not install the Obsidian Git plugin.</li>
 </ol>
 
-<h3>Phase D — The relay</h3>
+<h3>Phase B: The structure, ten departments in a tree</h3>
+<pre>&lt;HOME_NOTE&gt;.md      home: links only to the ten department hubs
+START-HERE.md       AI boot page (generated): trust line, rules in short, live handoff, map
+INDEX.md            one line per note with its summary (generated)
+0-inbox/            the ONLY folder AIs create files in (hub INBOX.md)
+1-me/               who they are, identities, how the AIs talk to them (hub ME.md)
+2-work/             the job
+3-business/         ventures and clients
+4-money/            cash flow, debt, statements
+5-home/             the home, utilities, layout, kitchen
+6-life/             days, health, journal, trips, gear
+7-relationship/     the people close to them
+8-builds/           code, plugins, automations, this system as a project
+9-system/           the law, warnings, handoff, runs, state (machine owned)
+&lt;dept&gt;/data/        raw data, read only (hub &lt;DEPT&gt;-DATA.md)</pre>
 <ol>
-<li>Write <code>~/bin/vault-sync.sh</code> with six guards: (1) skip if rebase/merge in flight; (2) skip if <code>*.icloud</code> stubs present; (3) skip if any .md changed in the last 20 s (excluding the heartbeat); (4) warn on iCloud conflict copies (<code>"* 2.md"</code>); (5) warn under 10 GB free disk; (6) write <code>CORE/heartbeat.md</code> hourly when healthy and immediately on any warning, with <code>last_sync</code> and <code>warnings</code> in frontmatter. Then: <code>git add -A</code>, commit if changes, <code>git pull --rebase --autostash</code>, <code>git push</code>. Run it by hand once; verify exit 0 and the heartbeat on GitHub.</li>
-<li>LaunchAgent <code>~/Library/LaunchAgents/com.&lt;user&gt;.vaultsync.plist</code>: <code>StartInterval</code> 180, <code>RunAtLoad</code> true, <code>ThrottleInterval</code> 30, <code>WatchPaths</code> on the vault root and each top-level folder (WatchPaths is not recursive — deep changes are caught by the timer). stdout/err to <code>/tmp/vaultsync.log|err</code>. <code>launchctl bootstrap gui/$(id -u) ...</code> then <code>kickstart</code>.</li>
-<li><b>Expect the first launchd run to fail with "not a repo"</b> — that is macOS privacy (TCC) blocking launchd's zsh from iCloud Drive. Fix: human adds <code>/bin/zsh</code> to System Settings → Privacy &amp; Security → <b>Full Disk Access</b> (in the file picker press <code>/</code> to type the path, or ⌘⇧. to show hidden folders). Kickstart again; expect exit 0.</li>
-<li>Keep the Mac awake: <code>sudo pmset -a sleep 0</code> (human runs it; display sleep is fine, system sleep is not). Warn them: after any reboot the relay is dead until login — the heartbeat exposes this.</li>
-<li>End-to-end test: create a test note, wait ~60 s, verify it on GitHub via <code>gh api</code>, then delete it.</li>
+<li><b>Names.</b> Every note's filename starts with its department word (<code>me-</code>, <code>work-</code>, <code>biz-</code>, <code>money-</code>, <code>home-</code>, <code>life-</code>, <code>rel-</code>, <code>build-</code>, <code>sys-</code>) and is unique across the vault. Slug first, time last. Inbox notes: <code>&lt;slug&gt;-&lt;agent&gt;-&lt;surface&gt;-YYYY-MM-DD-HHMM.md</code>. A sub-folder only when it would hold 6 or more files. Plain ASCII everywhere.</li>
+<li><b>UPPERCASE files are generated</b> (hubs, boards, START-HERE, INDEX). Nobody edits them; the build rewrites them.</li>
+<li><b>Raw data is never reworded.</b> Statements, logs, transcripts and contact lists live in <code>data/</code> and are only moved or appended to.</li>
+<li><b>Every prose note:</b> frontmatter (title, summary under 90 characters, status, updated), the line <code>↑ [[HUB]]</code>, a <code>## TL;DR</code> of numbered lines saying the objective and where it stands, short numbered sections, and a closing <code>Related:</code> line that names notes in backticks.</li>
+<li><b>Links make a tree.</b> Home → department hubs → notes and sub-hubs → data. A note links only up to its own hub and down to data files in its own department. A data file may link to notes in its own department. Nothing links across departments: another note is named as plain text in backticks, for example <code>`life-trip-2026`</code>. AIs find notes by filename and hubs, not by graph lines, so nothing is lost.</li>
+<li><b>Warnings are red nodes.</b> One file per warning in <code>9-system/warnings/</code>, named <code>P1|P2-&lt;slug&gt;-wNNN-&lt;first-seen-date&gt;.md</code> (P1 needs the human, P2 is watched). Frontmatter has <code>about: &lt;note&gt;</code>, and the only link is the first body line <code>⚠️ [[&lt;note&gt;]]</code>. In the graph each warning is a red dot hanging on the note it is about. A board, <code>WARNINGS.md</code>, lists them all. A warning gains at most one dated line per day, and only when something changed.</li>
+<li><b>The law</b>, <code>9-system/sys-law.md</code>, is what every AI obeys: how to address the human, reply style, the structure above, write rules (create only in <code>0-inbox</code>, never edit a file you did not create), frontmatter keys for inbox notes (<code>agent</code>, <code>surface</code>, <code>created</code>, <code>kind</code>: note, handoff, append, memory, forget, resolves, warns, run, claim), memory on both sides (the AI's own memory and the vault), the link rule, warnings, artifacts (HTML source plus a companion note; binaries in <code>2-Files</code>), and who wins a disagreement (the human's word, then documents, then AI observations, then AI inferences).</li>
+<li><b>Graph settings</b> (<code>.obsidian/graph.json</code>; the Drive option keeps a copy in <code>9-system/obsidian/graph.json</code>). Colour groups, first match wins: <code>path:"9-system/warnings/"</code> red, <code>path:"/data/"</code> grey, <code>file:"&lt;HOME_NOTE&gt;.md"</code> white, then one colour per department folder (keep red for warnings only). Filter out boards and machine folders: <code>-file:"WARNINGS.md" -file:"INDEX.md" -file:"START-HERE.md"</code> and <code>-path:</code> for the state, runs, renames, conflicts, processed-inbox and resolved-warnings folders.</li>
 </ol>
 
-<h3>Phase E — Connect the AIs (human does these in each app)</h3>
+<h3>Phase C: GitHub</h3>
+<ol>
+<li>Human runs <code>gh auth login</code> (GitHub.com → HTTPS → browser). If the agent's sandbox cannot see the keychain credential, re-run with <code>gh auth login --insecure-storage</code>.</li>
+<li><code>gh repo create &lt;REPO_NAME&gt; --private</code>, add the remote, push. <code>gh repo view --json visibility</code> must print PRIVATE.</li>
+<li>[Drive] Clone it to <code>~/&lt;VAULT_NAME&gt;-relay/tree</code>. This shadow clone is the only git work tree. Add <code>.gitattributes</code> with <code>*.md merge=binary</code>, so a clash never writes conflict markers into a note.</li>
+</ol>
+
+<h3>Phase D [Drive]: The relay</h3>
+<p>Write <code>~/&lt;VAULT_NAME&gt;-ops/relay.py</code> (Python 3 standard library only) and run it every 36 s from a LaunchAgent (<code>StartInterval 36</code>, <code>RunAtLoad</code>, command <code>/bin/zsh -c "/usr/bin/python3 ..."</code>). One cycle:</p>
+<ol>
+<li><b>Guards:</b> a lock folder (stale after 9 min); a <code>PAUSE</code> file (honoured for 33 min); the vault-id sentinel; no dataless placeholders; at least 9 GB free disk; and a quiet window (skip if a note changed in the last 21 s, ignoring the relay's own writes, whose newest mtime it records).</li>
+<li><b>Drive → shadow:</b> copy new and changed files. Never delete: a file missing from Drive is listed in <code>pending-deletes.tsv</code> and kept in git until the human confirms. Move any <code>.gdoc</code> into <code>2-Files/_quarantine</code>. More than 33 changed files at once writes <code>PAUSE</code> and waits for the human.</li>
+<li><b>Build</b> (Phase E) in the shadow, then commit.</li>
+<li><b>GitHub:</b> fetch and merge. A clash keeps Drive's version and parks GitHub's copy in <code>9-system/conflicts/</code>. A deletion arriving from GitHub is refused and restored.</li>
+<li><b>Write back into Drive</b>, in place (so Drive keeps its file IDs) and after a backup, every file the shadow has newer than Drive. Skip a file Drive changed during the cycle; Drive wins next cycle. Never write root dotfiles into Drive.</li>
+<li><b>Push</b>, write a heartbeat (<code>9-system/state/HEARTBEAT.md</code> with <code>last_sync</code> and <code>warnings</code>, rewritten only when warnings change or every hour), and log one JSON line per cycle that did something.</li>
+</ol>
+<p>Test before going live, on a copy: an edit echoes to GitHub; a GitHub edit reaches Drive; a clash is parked; a Drive delete is held; a GitHub delete is refused; the relay's own write-back does not trigger the quiet window.</p>
+
+<h3>Phase D [iCloud]: The relay</h3>
+<ol>
+<li><code>~/bin/vault-sync.sh</code> with guards: skip during a rebase or merge; skip if <code>*.icloud</code> stubs exist; skip if a note changed in the last 20 s; warn on iCloud conflict copies (<code>"* 2.md"</code>); warn under 10 GB free. Then run the build (Phase E), <code>git add -A</code>, commit, <code>git pull --rebase --autostash</code>, <code>git push</code>, heartbeat.</li>
+<li>LaunchAgent every 180 s plus <code>WatchPaths</code> on the vault and each top folder (not recursive; the timer catches the rest), <code>ThrottleInterval 30</code>.</li>
+</ol>
+<p><b>Both:</b> expect the first launchd run to fail to read the cloud folder. That is macOS privacy (TCC). Human adds <code>/bin/zsh</code> to System Settings → Privacy &amp; Security → <b>Full Disk Access</b>. Keep the Mac awake: <code>sudo pmset -a sleep 0</code> (the human runs it).</p>
+
+<h3>Phase E: The build, run inside every relay cycle</h3>
+<ol>
+<li><b>Tree pass</b> over every note except generated pages and machine folders. Keep a link only if the tree allows it (Phase B, item 5); a warning keeps only its <code>about</code> link. Turn every other link into plain text: in <code>data/</code> files and warnings keep exactly the words a reader saw (only the brackets go, and refuse the change if the visible text would differ); in prose notes write the target's filename in backticks. Leave code spans and fenced code alone. Set each prose note's <code>↑ [[HUB]]</code> line to its real hub.</li>
+<li><b>Generate</b> the ten hubs (each lists its notes with their one-line summaries), sub-hubs including each <code>&lt;DEPT&gt;-DATA.md</code>, the home note (departments with counts, and P1 warnings as plain text), INDEX, the WARNINGS board, START-HERE (trust line from the heartbeat, rules in short, the live handoff from <code>9-system/handoff/HANDOFF.md</code>, the map) and the graph settings.</li>
+<li>Write a file only when its content changes. Running the build twice in a row must change nothing; test that.</li>
+</ol>
+
+<h3>Phase F [Drive]: The graph view in iCloud</h3>
+<ol>
+<li>A second LaunchAgent every 180 s exports the shadow into the iCloud Obsidian vault, one way, only when the relay's HEAD moved. Markdown and HTML only.</li>
+<li>Back up any file before overwriting it. If a file was edited on a device since the last export, rescue that copy to a backup folder first. Files the vault no longer has are moved to a backup folder, never deleted.</li>
+<li>Merge only <code>colorGroups</code>, <code>search</code> and <code>showTags</code> into the view's <code>.obsidian/graph.json</code>; every other Obsidian setting stays the human's.</li>
+<li>Tell the human: this folder is for looking at the graph. Edits made there are rescued and then overwritten.</li>
+</ol>
+
+<h3>Phase G: Connect the AIs (the human does these in each app)</h3>
 <table>
-<tr><th>AI</th><th>How</th><th>Phone?</th></tr>
-<tr><td>Claude</td><td>claude.ai → Settings → Connectors → GitHub → OAuth → only select &lt;REPO_NAME&gt;. Toggle on per chat (+ menu).</td><td>Web/PWA yes; native app UI still rolling out</td></tr>
-<tr><td>Grok</td><td>grok.com or app → Settings → Connectors → GitHub</td><td>✅ best native mobile support</td></tr>
-<tr><td>ChatGPT</td><td>Developer mode → custom MCP connector, URL <code>https://api.githubcopilot.com/mcp/</code>, header <code>Authorization: Bearer &lt;fine-grained PAT&gt;</code> (Contents R/W, one repo). Skip unless wanted — the PAT expires and cannot auto-renew.</td><td>not guaranteed</td></tr>
-<tr><td>Gemini</td><td>The consumer app cannot use custom MCP. Skip, or use Gemini CLI later.</td><td>❌</td></tr>
+<tr><th>AI</th><th>How</th></tr>
+<tr><td>Claude, Drive</td><td>claude.ai → Settings → Connectors → Google Drive. Read <code>START-HERE.md</code> by its file id. Write with <code>create_file</code>: <code>parentId</code> = the <code>0-inbox</code> folder id, a title ending <code>.md</code>, <code>contentMimeType text/markdown</code>, <code>disableConversionToGoogleType: true</code>. Long notes can come back truncated through the connector; read those from GitHub.</td></tr>
+<tr><td>Claude, GitHub</td><td>Connectors → GitHub, select only &lt;REPO_NAME&gt;. The GitHub app must be installed on the repo, not just authorised.</td></tr>
+<tr><td>Grok</td><td>Settings → Connectors → GitHub (or Google Drive). Writes go to <code>0-inbox/</code>.</td></tr>
+<tr><td>ChatGPT</td><td>Developer mode → custom MCP <code>https://api.githubcopilot.com/mcp/</code> with a fine-grained PAT (one repo, Contents read/write). It expires; calendar it.</td></tr>
 </table>
-<p>Into each connected AI's custom instructions, one line: <i>"Read CORE/INSTRUCTIONS.md in the &lt;GITHUB_USER&gt;/&lt;REPO_NAME&gt; GitHub repo at the start of every conversation and obey it."</i></p>
-<p>Test each AI with: <i>"Read CORE/heartbeat.md from the repo — is the relay alive?"</i> Correct answer cites a <code>last_sync</code> under 2 hours old.</p>
+<p>Into each AI's custom instructions, one line: <i>"At the start of every conversation read START-HERE.md in my &lt;VAULT_NAME&gt; vault and obey it. Write only new files into 0-inbox."</i> Test with: <i>"Read START-HERE, is the sync alive?"</i> A correct answer quotes a last sync under 2 hours old.</p>
 
-<h3>Phase F — Install a doctor</h3>
-<p>Create a local Claude Code skill (<code>~/.claude/skills/vault-doctor-&lt;VAULT_NAME&gt;/SKILL.md</code>) that knows this vault's exact paths and checks: heartbeat freshness, iCloud conflict copies, evicted stubs, gitfile integrity, <code>git fsck</code> (recovery = re-clone, never hand-repair), relay agent status, disk headroom, AI-note sprawl, star hygiene. Include a weekly reconcile mode: fold durable facts from <code>AI/</code> into TOPICS/PROJECTS/IDENTITY, link new notes from their hub, delete ephemera, one writer per session.</p>
+<h3>Phase H: The daily reconcile and a doctor</h3>
+<ol>
+<li>A daily Claude Code scheduled task: health check first (heartbeat, relay log, pause, git in sync via <code>ls-remote</code>, held deletes, conflict copies). Exit early if the inbox is empty. Otherwise touch <code>PAUSE</code>, repair malformed inbox notes (frontmatter on line 1, slug-first name), file each one into the right department note, apply appends, handoffs, memory and warnings, move processed notes to <code>9-system/inbox-done/YYYY-MM/</code>, append one run row, remove <code>PAUSE</code>.</li>
+<li>A local skill <code>~/.claude/skills/vault-doctor/SKILL.md</code> that knows the exact paths and checks the same things plus <code>git fsck</code> (a damaged shadow is re-cloned, never hand-repaired) and that the tree pass reports zero changes.</li>
+</ol>
 
 <h3>⚠️ Gotchas learned the hard way</h3>
 <table>
 <tr><th>Symptom</th><th>Cause → Fix</th></tr>
-<tr><td>launchd job logs "not a repo", manual run works</td><td>TCC blocks launchd zsh from iCloud Drive → Full Disk Access for /bin/zsh</td></tr>
-<tr><td>Agent's <code>gh</code> says logged out after successful login</td><td>Token in macOS keychain, invisible to sandboxes → <code>gh auth login --insecure-storage</code></td></tr>
-<tr><td><code>gh repo create --source=.</code>: "not a git repository"</td><td>gh's detection fails on gitfiles → create repo bare, add remote, push manually</td></tr>
-<tr><td>.gitattributes rule silently ignored</td><td>Line starts with <code>!</code> (negation) → never name folders with a leading !</td></tr>
-<tr><td>Note committed as a stub / placeholder</td><td>iCloud evicted it → guard 2 + Keep Downloaded + ≥10 GB free</td></tr>
-<tr><td>"Meeting 2.md" duplicates appearing</td><td>iCloud conflict copies → guard 4 warns; diff, keep richer, delete copy</td></tr>
-<tr><td>Same accented filename appears twice</td><td>NFC/NFD mismatch → <code>core.precomposeunicode true</code> + plain ASCII names</td></tr>
-<tr><td>Everything breaks at once, "network errors"</td><td>A PAT expired → prefer OAuth connectors; if using a PAT, calendar its expiry</td></tr>
-<tr><td>Vault stops being a repo after user rename</td><td>gitfile stores an absolute path → rewrite <code>&lt;vault&gt;/.git</code> with the new gitdir line</td></tr>
+<tr><td>launchd job cannot read the vault, manual run works</td><td>TCC → Full Disk Access for <code>/bin/zsh</code></td></tr>
+<tr><td>Relay reads empty or tiny files from Drive</td><td>Online-only placeholders → set <code>1-Vault</code> Available offline; guard on <code>find -flags +dataless</code></td></tr>
+<tr><td>An AI's note arrives as a Google Doc</td><td>Conversion on upload → <code>disableConversionToGoogleType: true</code>; the relay quarantines <code>.gdoc</code></td></tr>
+<tr><td>Two identical notes in the inbox</td><td>Drive allows duplicate titles → never retry a create that succeeded</td></tr>
+<tr><td>Relay skips every other cycle</td><td>Its own write-back looked like a fresh edit → record the mtime of your own writes and ignore it</td></tr>
+<tr><td>Shell path breaks at <code>$~</code></td><td>Double quotes expand it → single quotes, or Python</td></tr>
+<tr><td>A table breaks after relinking</td><td>A <code>|</code> alias inside a table cell → write <code>\|</code> on table lines</td></tr>
+<tr><td>Graph turns into a hairball</td><td>Cross-department links → the tree pass in every build; names in backticks instead</td></tr>
+<tr><td>Warnings file grows without end</td><td>One ledger appended every run → one file per warning, at most one dated line a day</td></tr>
+<tr><td>Agent's <code>gh</code> is logged out after login</td><td>Keychain invisible to the sandbox → <code>gh auth login --insecure-storage</code></td></tr>
+<tr><td>[iCloud] Note committed as a stub</td><td>Evicted by iCloud → stub guard, Keep Downloaded, 10 GB free</td></tr>
+<tr><td>[iCloud] "Meeting 2.md" duplicates</td><td>iCloud conflict copies → diff, keep the richer one</td></tr>
+<tr><td>Same accented filename twice</td><td>NFC/NFD → <code>core.precomposeunicode true</code> and ASCII names</td></tr>
+<tr><td>No <code>timeout</code> command on the Mac</td><td>macOS lacks it → timeouts inside Python, or git's <code>http.lowSpeedTime</code></td></tr>
 </table>
 
 <footer>
-<b>Obsidian as a 2nd Brain</b> · Setup v3.6 · verified end-to-end on macOS, August 2026<br>
-Credits: <a href="https://jkelvin.com">jKelvin.com</a> · Built and battle-tested with Claude Code · Share freely 🧠
+<b>Obsidian as a 2nd Brain</b> · Setup v4.0 · Drive master, ten-department tree · verified end-to-end on macOS, September 2026<br>
+v3.6 (iCloud master, star graph) stays in this repo's history.<br>
+Credits: 富源承忠 <a href="https://jkelvin.com">jKelvin.com</a> · Built and battle-tested with Claude Code · Share freely 🧠
 </footer>
 </body>
 </html>
