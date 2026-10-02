@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Obsidian as a 2nd Brain, Setup v4.0</title>
+<title>Obsidian as a 2nd Brain, Setup v5.0</title>
 <style>
 :root{--bg:#0f1115;--fg:#e6e6e6;--dim:#9aa0a6;--acc:#ff69b4;--card:#181b22;--code:#12141a;--ok:#2ecc40;--warn:#ffb020}
 @media (prefers-color-scheme: light){:root{--bg:#fafafa;--fg:#1a1a1a;--dim:#666;--card:#fff;--code:#f2f2f4}}
 body{background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,Segoe UI,sans-serif;max-width:860px;margin:0 auto;padding:2rem 1rem}
 h1{color:var(--acc)} h2{border-bottom:1px solid var(--dim);padding-bottom:.3rem;margin-top:2.2rem}
 code,pre{background:var(--code);border-radius:6px;font:13px/1.5 ui-monospace,Menlo,monospace}
-code{padding:.1rem .35rem} pre{padding:1rem;overflow-x:auto}
+code{padding:.1rem .35rem} pre{padding:1rem;overflow-x:auto;white-space:pre-wrap}
 .card{background:var(--card);border-radius:10px;padding:1rem 1.2rem;margin:1rem 0;border-left:4px solid var(--acc)}
 .warn{border-left-color:var(--warn)} .ok{border-left-color:var(--ok)}
 table{border-collapse:collapse;width:100%} td,th{border:1px solid var(--dim);padding:.4rem .6rem;text-align:left;font-size:14px}
@@ -20,179 +20,193 @@ table{border-collapse:collapse;width:100%} td,th{border:1px solid var(--dim);pad
 <body>
 
 <h1>🧠 Obsidian as a 2nd Brain</h1>
-<p><b>Setup v4.0</b>: a shared AI memory layer that several AIs read and write together. One master copy of your notes, version history on a private GitHub repo, and an Obsidian graph you can open on Mac, iPhone and iPad.</p>
+<p><b>Setup v5.0</b>: a shared AI memory layer that several AIs read and write together. One master copy of your notes in Google Drive, version history on a private GitHub repo, and an Obsidian graph you can open on Mac, iPhone and iPad.</p>
+<p>📦 <b>GitHub repo:</b> <a href="https://github.com/jkelvin-com/Oaa2B">github.com/jkelvin-com/Oaa2B</a> · 🚀 <a href="#run">Jump to the one-line setup</a></p>
 
-<h2>🧭 Choose your master</h2>
+<h2>✨ New in v5</h2>
+<div class="card">
+<ol>
+<li><b>The real engine ships in the repo</b> (<code>engine/</code>): the relay, the tree pass, the page builder, the iCloud view export and a scaffold script. It's the code that runs the author's own vault every day, with personal content taken out. Python 3 standard library only, one <code>config.json</code>.</li>
+<li><b>Ten separate stars, one parent each.</b> The home note names the ten hubs without linking them, so each branch grows on its own. A note can sit under another note with <code>parent:</code>, and a note adopts raw data files with <code>children:</code>.</li>
+<li><b>Slug-only names.</b> AIs write stamped names so two notes never clash on arrival. The relay strips the stamp within a minute, so the graph shows clean names.</li>
+<li><b>Quiet warnings.</b> Warning dots are the darkest grey, darker than data, so they don't take over the graph.</li>
+<li><b>Templates</b> (<code>templates/</code>): the law, the handoff seed, the vault-doctor skill, the daily reconcile task, and the instruction line for each AI.</li>
+</ol>
+</div>
+
+<h2>🧭 How it fits together</h2>
 <table>
-<tr><th></th><th>🟢 Google Drive master (recommended, new in v4)</th><th>🍎 iCloud master (classic, v3.6)</th></tr>
-<tr><td>Where notes live</td><td>A Drive folder, kept offline on the Mac by Google Drive for Desktop</td><td>The Obsidian vault in iCloud</td></tr>
-<tr><td>How AIs reach it</td><td>Drive connectors (Claude and others) plus GitHub</td><td>GitHub only</td></tr>
-<tr><td>Where git runs</td><td>A shadow clone on local disk, never inside a cloud folder</td><td>A git database outside iCloud (<code>--separate-git-dir</code>)</td></tr>
-<tr><td>Obsidian graph</td><td>A one-way copy into the iCloud Obsidian folder, a view only</td><td>The vault itself</td></tr>
-<tr><td>Why pick it</td><td>More AIs connect to Drive natively, Drive keeps file IDs stable, and a cloud edit can never corrupt git</td><td>Fewer moving parts if every AI you use speaks GitHub</td></tr>
+<tr><th>Piece</th><th>What it is</th></tr>
+<tr><td>🟢 Master</td><td>A Google Drive folder, kept offline on the Mac by Google Drive for Desktop. AIs reach it through their Drive connectors.</td></tr>
+<tr><td>🔄 Relay</td><td><code>oaa2b_relay.py</code> every 36 s: Drive → a shadow git clone on local disk → GitHub, and back. Git never runs inside a cloud folder.</td></tr>
+<tr><td>🏗️ Build</td><td>Inside every relay cycle: keeps the links a tree, then regenerates the hubs, home note, INDEX, WARNINGS, START-HERE and graph colours.</td></tr>
+<tr><td>👀 View</td><td><code>oaa2b_view.py</code> every 180 s copies the result one way into an iCloud Obsidian vault, so you see the graph on every Apple device. Edits there are rescued, then overwritten.</td></tr>
+<tr><td>🩺 Care</td><td>A daily reconcile files the inbox; a doctor skill checks health on demand.</td></tr>
 </table>
-<p class="dim">Both options share the same structure: ten departments in a tree, generated hubs, raw data kept word for word, and warnings shown as red nodes.</p>
+<p class="dim">Prefer the older iCloud-master setup? It's v3.6, in this repo's history.</p>
 
 <h2>👤 Human prerequisites, do these first</h2>
 <div class="card">
 <ol>
 <li><b>A Mac that stays on.</b> It is the sync relay. The lid may be closed on power and the screen may lock, but the system must not sleep.</li>
-<li><b>Drive master:</b> <a href="https://www.google.com/drive/download/">Google Drive for Desktop</a> installed, signed in, set to <b>Stream files</b>. <b>iCloud master:</b> iCloud Drive on (System Settings → Apple ID → iCloud).</li>
-<li><b>Obsidian</b> on the Mac (<a href="https://obsidian.md">obsidian.md</a>) and on your iPhone/iPad, with a vault stored in iCloud (for the Drive option this becomes the graph view).</li>
+<li><a href="https://www.google.com/drive/download/">Google Drive for Desktop</a> installed and signed in.</li>
+<li><b>Obsidian</b> on the Mac (<a href="https://obsidian.md">obsidian.md</a>) and on your iPhone/iPad, with iCloud Drive on (that's where the graph view lives).</li>
 <li><b>A GitHub account</b>, free is fine: <a href="https://github.com/signup">github.com/signup</a>.</li>
-<li><b>Claude Code</b> installed and working on the Mac.</li>
+<li><a href="https://claude.com/claude-code">Claude Code</a> installed and working on the Mac.</li>
 </ol>
 </div>
 
-<h2>🚀 How to run this setup</h2>
+<h2 id="run">🚀 How to run this setup</h2>
 <div class="card ok">
-<p>Paste this single line into Claude Code on your Mac:</p>
-<pre>Fetch https://raw.githubusercontent.com/jKelvin-com/Oaa2B/main/Oaa2B_setup.html and follow its AI-RUNBOOK section to set up "Obsidian as a 2nd Brain" for me.</pre>
-<p class="dim">Claude interviews you for the variables below, then builds everything, verifying each step.</p>
+<ol>
+<li>Finish the human prerequisites above.</li>
+<li>Open Claude Code on your Mac and paste this single line:
+<pre>Fetch https://raw.githubusercontent.com/jKelvin-com/Oaa2B/main/Oaa2B_setup.html and follow its AI-RUNBOOK section to set up "Obsidian as a 2nd Brain" for me.</pre></li>
+<li>Answer Claude's interview (vault name, how the AIs address you, branches, repo), and do the steps it hands you: browser logins, Full Disk Access, keeping the Mac awake.</li>
+<li>Test it: ask any connected AI <i>"Read START-HERE, is the sync alive?"</i></li>
+</ol>
+<p class="dim">Claude builds everything from the engine in the repo and checks each step. Source, history and issues: <a href="https://github.com/jkelvin-com/Oaa2B">github.com/jkelvin-com/Oaa2B</a>.</p>
 </div>
 
 <h2>🤖 AI-RUNBOOK <span class="dim">(instructions for the AI agent executing this setup)</span></h2>
 
-<div class="card warn"><b>Agent, read first:</b> execute the phases in order and verify every step's output before moving on. Ask the human only the interview questions, and whenever an action needs their hands (browser logins, System Settings, Finder). Never store secrets in files you commit. Never run git inside Google Drive or iCloud. If a step fails, diagnose before retrying; the Gotchas table at the end lists the known traps. Phases marked <b>[Drive]</b> or <b>[iCloud]</b> apply to that master only.</div>
+<div class="card warn"><b>Agent, read first:</b> do the phases in order and check each step's output before moving on. Ask the human only the interview questions, and whenever an action needs their hands (browser logins, System Settings, Finder, <code>sudo</code>). Never store secrets in files you commit. Never run git inside Google Drive or iCloud. If a step fails, find the cause before retrying; the Gotchas table at the end lists the known traps.</div>
 
 <h3>Phase 0: Interview the human</h3>
-<p>Ask for, and confirm back, these variables. Use them everywhere below.</p>
+<p>Ask for these values, confirm them back, and use them everywhere below. They go into <code>engine/config.json</code>.</p>
 <table>
-<tr><th>Variable</th><th>Meaning</th><th>Example</th></tr>
-<tr><td><code>MASTER</code></td><td><code>drive</code> (recommended) or <code>icloud</code></td><td>drive</td></tr>
-<tr><td><code>VAULT_NAME</code></td><td>Vault name, plain ASCII</td><td>Brain</td></tr>
-<tr><td><code>ROOT</code></td><td>[Drive] Top folder in My Drive. It holds <code>1-Vault</code> (notes) and <code>2-Files</code> (binaries)</td><td>brain</td></tr>
-<tr><td><code>HOME_NOTE</code></td><td>The single home note at the root of the graph</td><td>home</td></tr>
-<tr><td><code>REPO_NAME</code></td><td>Private GitHub repo name</td><td>brain</td></tr>
-<tr><td><code>GITHUB_USER</code></td><td>Their GitHub username</td><td>your-user</td></tr>
-<tr><td><code>GIT_EMAIL</code></td><td>Email for commits (the GitHub noreply address is fine)</td><td>you@example.com</td></tr>
-<tr><td><code>AGENTS</code></td><td>Which AIs will write</td><td>claude, grok</td></tr>
-<tr><td><code>DEPARTMENTS</code></td><td>The ten branches (keep 0 and 9, rename 1 to 8 to fit their life)</td><td>see Phase B</td></tr>
-<tr><td><code>ADDRESS</code></td><td>(optional) How the AIs address them, and a shared persona name</td><td>none</td></tr>
+<tr><th>Value</th><th>Meaning</th><th>Example</th></tr>
+<tr><td><code>ROOT</code></td><td>Top folder in My Drive. It holds <code>Vault</code> (notes) and <code>Files</code> (binaries)</td><td>brain</td></tr>
+<tr><td><code>VAULT_NAME</code></td><td>Name for the iCloud Obsidian view and the local folders, plain ASCII</td><td>Brain</td></tr>
+<tr><td><code>human</code></td><td>How the AIs address them</td><td>Sam</td></tr>
+<tr><td><code>persona</code></td><td>(optional) A shared name every AI answers to</td><td>Nova</td></tr>
+<tr><td><code>home_note</code></td><td>The home note's name</td><td>home</td></tr>
+<tr><td><code>github_repo</code></td><td>Private repo, <code>user/name</code></td><td>sam/brain</td></tr>
+<tr><td><code>branches</code></td><td>The ten branches: keep <code>0-inbox</code> and <code>9-system</code>, rename 1 to 8 to fit their life (folder, hub name, emoji, colour, one-line purpose)</td><td>see <code>config.example.json</code></td></tr>
+<tr><td><code>rules</code></td><td>House rules every AI must follow (style, language, things never to do)</td><td>"Reply in numbered items."</td></tr>
+<tr><td><code>LABEL</code></td><td>launchd label prefix</td><td>com.sam.brain</td></tr>
 </table>
 
-<h3>Phase A [Drive]: The master folder and the shadow clone</h3>
+<h3>Phase A: The Drive folder</h3>
 <ol>
-<li>Human creates <code>&lt;ROOT&gt;/1-Vault</code> and <code>&lt;ROOT&gt;/2-Files</code> in My Drive, then right-clicks <code>1-Vault</code> in Finder → <b>Offline access → Available offline</b>.</li>
-<li>The local path is <code>~/Library/CloudStorage/GoogleDrive-&lt;account&gt;/My Drive/&lt;ROOT&gt;/1-Vault</code>. Single-quote it in shell whenever <code>ROOT</code> contains <code>$</code> or <code>~</code>, or build it in Python.</li>
-<li>Verify nothing is a placeholder: <code>find '&lt;vault&gt;' -flags +dataless</code> must print nothing.</li>
-<li>If an existing iCloud vault is being moved in, copy it into <code>1-Vault</code> (no <code>.git</code>, no <code>.obsidian</code>), and keep a tarball backup of the original first.</li>
-<li>Write a random id to <code>9-system/state/vault-id</code> in the vault and to <code>~/&lt;VAULT_NAME&gt;-relay/state/vault-id</code>. The relay refuses to sync if they differ, so it can never sync the wrong folder.</li>
+<li>Human creates <code>&lt;ROOT&gt;/Vault</code> and <code>&lt;ROOT&gt;/Files</code> in My Drive, then in Finder right-clicks <code>&lt;ROOT&gt;</code> → <b>Offline access → Available offline</b>.</li>
+<li>The local path is <code>~/Library/CloudStorage/GoogleDrive-&lt;account&gt;/My Drive/&lt;ROOT&gt;/Vault</code>. Single-quote it in shell whenever it contains <code>$</code> or <code>~</code>, or build it in Python.</li>
+<li>Check nothing is a placeholder: <code>find '&lt;vault&gt;' -flags +dataless</code> must print nothing.</li>
+<li>Moving an existing vault in? Copy its notes into <code>Vault</code> (no <code>.git</code>, no <code>.obsidian</code>), and keep a tarball backup of the original first.</li>
 </ol>
 
-<h3>Phase A [iCloud]: Split the vault from its git history</h3>
+<h3>Phase B: The engine and its config</h3>
 <ol>
-<li>Pin the vault: <code>brctl download "&lt;vault&gt;"</code>, verify zero <code>*.icloud</code> stubs, and have the human right-click the vault in Finder → <b>Keep Downloaded</b>.</li>
-<li>Write <code>.gitignore</code> first: <code>.DS_Store</code>, <code>.Trash/</code>, <code>*.icloud</code>, <code>.iCloud*</code>, <code>.obsidian/workspace*.json</code>, <code>.obsidian/cache</code>, <code>.obsidian/plugins/*/data.json</code>, <code>.trash/</code>, <code>*.tmp</code>, <code>*.swp</code>.</li>
-<li>Git database outside iCloud: <code>git init --separate-git-dir="$HOME/Git/&lt;REPO_NAME&gt;.git" -b main</code>; <code>cat .git</code> must print the gitdir line.</li>
-<li>Config: <code>pull.rebase true</code>, <code>rebase.autoStash true</code>, <code>core.precomposeunicode true</code>. Do not install the Obsidian Git plugin.</li>
-</ol>
-
-<h3>Phase B: The structure, ten departments in a tree</h3>
-<pre>&lt;HOME_NOTE&gt;.md      home: links only to the ten department hubs
-START-HERE.md       AI boot page (generated): trust line, rules in short, live handoff, map
-INDEX.md            one line per note with its summary (generated)
-0-inbox/            the ONLY folder AIs create files in (hub INBOX.md)
-1-me/               who they are, identities, how the AIs talk to them (hub ME.md)
-2-work/             the job
-3-business/         ventures and clients
-4-money/            cash flow, debt, statements
-5-home/             the home, utilities, layout, kitchen
-6-life/             days, health, journal, trips, gear
-7-relationship/     the people close to them
-8-builds/           code, plugins, automations, this system as a project
-9-system/           the law, warnings, handoff, runs, state (machine owned)
-&lt;dept&gt;/data/        raw data, read only (hub &lt;DEPT&gt;-DATA.md)</pre>
-<ol>
-<li><b>Names.</b> Every note's filename starts with its department word (<code>me-</code>, <code>work-</code>, <code>biz-</code>, <code>money-</code>, <code>home-</code>, <code>life-</code>, <code>rel-</code>, <code>build-</code>, <code>sys-</code>) and is unique across the vault. Slug first, time last. Inbox notes: <code>&lt;slug&gt;-&lt;agent&gt;-&lt;surface&gt;-YYYY-MM-DD-HHMM.md</code>. A sub-folder only when it would hold 6 or more files. Plain ASCII everywhere.</li>
-<li><b>UPPERCASE files are generated</b> (hubs, boards, START-HERE, INDEX). Nobody edits them; the build rewrites them.</li>
-<li><b>Raw data is never reworded.</b> Statements, logs, transcripts and contact lists live in <code>data/</code> and are only moved or appended to.</li>
-<li><b>Every prose note:</b> frontmatter (title, summary under 90 characters, status, updated), the line <code>↑ [[HUB]]</code>, a <code>## TL;DR</code> of numbered lines saying the objective and where it stands, short numbered sections, and a closing <code>Related:</code> line that names notes in backticks.</li>
-<li><b>Links make a tree.</b> Home → department hubs → notes and sub-hubs → data. A note links only up to its own hub and down to data files in its own department. A data file may link to notes in its own department. Nothing links across departments: another note is named as plain text in backticks, for example <code>`life-trip-2026`</code>. AIs find notes by filename and hubs, not by graph lines, so nothing is lost.</li>
-<li><b>Warnings are red nodes.</b> One file per warning in <code>9-system/warnings/</code>, named <code>P1|P2-&lt;slug&gt;-wNNN-&lt;first-seen-date&gt;.md</code> (P1 needs the human, P2 is watched). Frontmatter has <code>about: &lt;note&gt;</code>, and the only link is the first body line <code>⚠️ [[&lt;note&gt;]]</code>. In the graph each warning is a red dot hanging on the note it is about. A board, <code>WARNINGS.md</code>, lists them all. A warning gains at most one dated line per day, and only when something changed.</li>
-<li><b>The law</b>, <code>9-system/sys-law.md</code>, is what every AI obeys: how to address the human, reply style, the structure above, write rules (create only in <code>0-inbox</code>, never edit a file you did not create), frontmatter keys for inbox notes (<code>agent</code>, <code>surface</code>, <code>created</code>, <code>kind</code>: note, handoff, append, memory, forget, resolves, warns, run, claim), memory on both sides (the AI's own memory and the vault), the link rule, warnings, artifacts (HTML source plus a companion note; binaries in <code>2-Files</code>), and who wins a disagreement (the human's word, then documents, then AI observations, then AI inferences).</li>
-<li><b>Graph settings</b> (<code>.obsidian/graph.json</code>; the Drive option keeps a copy in <code>9-system/obsidian/graph.json</code>). Colour groups, first match wins: <code>path:"9-system/warnings/"</code> red, <code>path:"/data/"</code> grey, <code>file:"&lt;HOME_NOTE&gt;.md"</code> white, then one colour per department folder (keep red for warnings only). Filter out boards and machine folders: <code>-file:"WARNINGS.md" -file:"INDEX.md" -file:"START-HERE.md"</code> and <code>-path:</code> for the state, runs, renames, conflicts, processed-inbox and resolved-warnings folders.</li>
+<li><code>git clone https://github.com/jkelvin-com/Oaa2B.git ~/Oaa2B</code> (local disk, never a cloud folder).</li>
+<li><code>cp ~/Oaa2B/engine/config.example.json ~/Oaa2B/engine/config.json</code> and fill it with the interview answers. Paths: <code>vault</code> and <code>quarantine</code> (<code>&lt;ROOT&gt;/Files/_quarantine</code>) in Drive; <code>shadow</code> <code>~/&lt;VAULT_NAME&gt;-relay/tree</code>; <code>state</code> <code>~/&lt;VAULT_NAME&gt;-relay/state</code>; <code>backups</code> <code>~/&lt;VAULT_NAME&gt;Backups</code>; <code>log</code> <code>~/Library/Logs/&lt;VAULT_NAME&gt;/relay.log</code>; <code>view</code> <code>~/Library/Mobile Documents/iCloud~md~obsidian/Documents/&lt;VAULT_NAME&gt;</code>. Optional <code>memory_src</code>: Claude Code's auto-memory folder, mirrored into <code>9-system/claude-code-memory/</code>.</li>
+<li><code>config.json</code> holds personal paths; it stays local and is never committed anywhere public.</li>
 </ol>
 
 <h3>Phase C: GitHub</h3>
 <ol>
 <li>Human runs <code>gh auth login</code> (GitHub.com → HTTPS → browser). If the agent's sandbox cannot see the keychain credential, re-run with <code>gh auth login --insecure-storage</code>.</li>
-<li><code>gh repo create &lt;REPO_NAME&gt; --private</code>, add the remote, push. <code>gh repo view --json visibility</code> must print PRIVATE.</li>
-<li>[Drive] Clone it to <code>~/&lt;VAULT_NAME&gt;-relay/tree</code>. This shadow clone is the only git work tree. Add <code>.gitattributes</code> with <code>*.md merge=binary</code>, so a clash never writes conflict markers into a note.</li>
+<li><code>gh repo create &lt;github_repo&gt; --private --add-readme</code>, then <code>gh repo view &lt;github_repo&gt; --json visibility</code> must print PRIVATE.</li>
+<li>Clone it to the <code>shadow</code> path. This shadow clone is the only git work tree.</li>
 </ol>
 
-<h3>Phase D [Drive]: The relay</h3>
-<p>Write <code>~/&lt;VAULT_NAME&gt;-ops/relay.py</code> (Python 3 standard library only) and run it every 36 s from a LaunchAgent (<code>StartInterval 36</code>, <code>RunAtLoad</code>, command <code>/bin/zsh -c "/usr/bin/python3 ..."</code>). One cycle:</p>
+<h3>Phase D: Scaffold</h3>
 <ol>
-<li><b>Guards:</b> a lock folder (stale after 9 min); a <code>PAUSE</code> file (honoured for 33 min); the vault-id sentinel; no dataless placeholders; at least 9 GB free disk; and a quiet window (skip if a note changed in the last 21 s, ignoring the relay's own writes, whose newest mtime it records).</li>
-<li><b>Drive → shadow:</b> copy new and changed files. Never delete: a file missing from Drive is listed in <code>pending-deletes.tsv</code> and kept in git until the human confirms. Move any <code>.gdoc</code> into <code>2-Files/_quarantine</code>. More than 33 changed files at once writes <code>PAUSE</code> and waits for the human.</li>
-<li><b>Build</b> (Phase E) in the shadow, then commit.</li>
-<li><b>GitHub:</b> fetch and merge. A clash keeps Drive's version and parks GitHub's copy in <code>9-system/conflicts/</code>. A deletion arriving from GitHub is refused and restored.</li>
-<li><b>Write back into Drive</b>, in place (so Drive keeps its file IDs) and after a backup, every file the shadow has newer than Drive. Skip a file Drive changed during the cycle; Drive wins next cycle. Never write root dotfiles into Drive.</li>
-<li><b>Push</b>, write a heartbeat (<code>9-system/state/HEARTBEAT.md</code> with <code>last_sync</code> and <code>warnings</code>, rewritten only when warnings change or every hour), and log one JSON line per cycle that did something.</li>
+<li><code>python3 ~/Oaa2B/engine/oaa2b_init.py --launchd &lt;LABEL&gt;</code>. It creates the ten branch folders, seeds the law (<code>9-system/sys-law.md</code>), the live handoff and RENAMES, writes the same random <code>vault-id</code> into the vault and the state folder (the relay refuses to sync if they differ), adds <code>.gitignore</code> and <code>.gitattributes</code> (<code>*.md merge=binary</code>, so a clash never writes conflict markers into a note) to the shadow, and writes the two LaunchAgent plists without loading them. Re-running it never overwrites a file.</li>
+<li>Open <code>9-system/sys-law.md</code> with the human and add their own rules (style, address, anything AIs must never do).</li>
 </ol>
-<p>Test before going live, on a copy: an edit echoes to GitHub; a GitHub edit reaches Drive; a clash is parked; a Drive delete is held; a GitHub delete is refused; the relay's own write-back does not trigger the quiet window.</p>
 
-<h3>Phase D [iCloud]: The relay</h3>
+<h3>Phase E: First sync and tests</h3>
 <ol>
-<li><code>~/bin/vault-sync.sh</code> with guards: skip during a rebase or merge; skip if <code>*.icloud</code> stubs exist; skip if a note changed in the last 20 s; warn on iCloud conflict copies (<code>"* 2.md"</code>); warn under 10 GB free. Then run the build (Phase E), <code>git add -A</code>, commit, <code>git pull --rebase --autostash</code>, <code>git push</code>, heartbeat.</li>
-<li>LaunchAgent every 180 s plus <code>WatchPaths</code> on the vault and each top folder (not recursive; the timer catches the rest), <code>ThrottleInterval 30</code>.</li>
+<li>Wait 30 s after the last file change (the relay skips a cycle while someone is writing), then <code>python3 ~/Oaa2B/engine/oaa2b_relay.py --actor migration</code>. The migration actor lifts the bulk-change pause once.</li>
+<li>Check <code>relay.log</code> ends with a <code>cycle</code> line with <code>pushed: true</code>, and the vault now has <code>START-HERE.md</code>, <code>INDEX.md</code>, the home note and ten hubs.</li>
+<li>Run the build twice on the shadow: <code>python3 ~/Oaa2B/engine/oaa2b_build.py &lt;shadow&gt;</code>, commit, run it twice more, and <code>git status</code> must be empty. <code>oaa2b_tree.py &lt;shadow&gt; --dry-run</code> must say <code>changed 0, refused 0</code>.</li>
+<li>Test on the live vault, one at a time: an edit in Drive reaches GitHub; an edit on GitHub reaches Drive; deleting a file in Drive is held (<code>pending-deletes.tsv</code>, the heartbeat says so) and not pushed; deleting a file on GitHub is refused and restored (<code>refused-delete</code> in the log). Undo each test afterwards.</li>
 </ol>
-<p><b>Both:</b> expect the first launchd run to fail to read the cloud folder. That is macOS privacy (TCC). Human adds <code>/bin/zsh</code> to System Settings → Privacy &amp; Security → <b>Full Disk Access</b>. Keep the Mac awake: <code>sudo pmset -a sleep 0</code> (the human runs it).</p>
 
-<h3>Phase E: The build, run inside every relay cycle</h3>
+<h3>Phase F: Run it forever</h3>
 <ol>
-<li><b>Tree pass</b> over every note except generated pages and machine folders. Keep a link only if the tree allows it (Phase B, item 5); a warning keeps only its <code>about</code> link. Turn every other link into plain text: in <code>data/</code> files and warnings keep exactly the words a reader saw (only the brackets go, and refuse the change if the visible text would differ); in prose notes write the target's filename in backticks. Leave code spans and fenced code alone. Set each prose note's <code>↑ [[HUB]]</code> line to its real hub.</li>
-<li><b>Generate</b> the ten hubs (each lists its notes with their one-line summaries), sub-hubs including each <code>&lt;DEPT&gt;-DATA.md</code>, the home note (departments with counts, and P1 warnings as plain text), INDEX, the WARNINGS board, START-HERE (trust line from the heartbeat, rules in short, the live handoff from <code>9-system/handoff/HANDOFF.md</code>, the map) and the graph settings.</li>
-<li>Write a file only when its content changes. Running the build twice in a row must change nothing; test that.</li>
+<li><code>launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/&lt;LABEL&gt;.relay.plist</code>, and the same for <code>.view</code>.</li>
+<li>Expect the first launchd run to fail to read the cloud folder. That is macOS privacy (TCC). Human adds <code>/bin/zsh</code> and <code>/usr/bin/python3</code> to System Settings → Privacy &amp; Security → <b>Full Disk Access</b>, then restart the jobs.</li>
+<li>Keep the Mac awake: human runs <code>sudo pmset -a sleep 0</code>.</li>
+<li>Check <code>9-system/state/HEARTBEAT.md</code> shows a fresh <code>last_sync</code> and <code>warnings: none</code>.</li>
 </ol>
 
-<h3>Phase F [Drive]: The graph view in iCloud</h3>
+<h3>Phase G: The graph</h3>
 <ol>
-<li>A second LaunchAgent every 180 s exports the shadow into the iCloud Obsidian vault, one way, only when the relay's HEAD moved. Markdown and HTML only.</li>
-<li>Back up any file before overwriting it. If a file was edited on a device since the last export, rescue that copy to a backup folder first. Files the vault no longer has are moved to a backup folder, never deleted.</li>
-<li>Merge only <code>colorGroups</code>, <code>search</code> and <code>showTags</code> into the view's <code>.obsidian/graph.json</code>; every other Obsidian setting stays the human's.</li>
-<li>Tell the human: this folder is for looking at the graph. Edits made there are rescued and then overwritten.</li>
+<li>Human opens the iCloud folder <code>&lt;VAULT_NAME&gt;</code> as a vault in Obsidian on the Mac, then on the iPhone/iPad.</li>
+<li>The view job merges only <code>colorGroups</code>, <code>search</code> and <code>showTags</code> into <code>.obsidian/graph.json</code>; every other Obsidian setting stays the human's. Graph colours: warnings darkest grey, data grey, home white, one colour per branch. Boards and machine folders are filtered out.</li>
+<li>Tell the human: this folder is for looking at the graph. Edits made there are rescued to the backups folder and then overwritten. Edit in Drive, or ask an AI.</li>
 </ol>
 
-<h3>Phase G: Connect the AIs (the human does these in each app)</h3>
+<h3>Phase H: Connect the AIs (the human does these in each app)</h3>
 <table>
 <tr><th>AI</th><th>How</th></tr>
-<tr><td>Claude, Drive</td><td>claude.ai → Settings → Connectors → Google Drive. Read <code>START-HERE.md</code> by its file id. Write with <code>create_file</code>: <code>parentId</code> = the <code>0-inbox</code> folder id, a title ending <code>.md</code>, <code>contentMimeType text/markdown</code>, <code>disableConversionToGoogleType: true</code>. Long notes can come back truncated through the connector; read those from GitHub.</td></tr>
-<tr><td>Claude, GitHub</td><td>Connectors → GitHub, select only &lt;REPO_NAME&gt;. The GitHub app must be installed on the repo, not just authorised.</td></tr>
-<tr><td>Grok</td><td>Settings → Connectors → GitHub (or Google Drive). Writes go to <code>0-inbox/</code>.</td></tr>
-<tr><td>ChatGPT</td><td>Developer mode → custom MCP <code>https://api.githubcopilot.com/mcp/</code> with a fine-grained PAT (one repo, Contents read/write). It expires; calendar it.</td></tr>
+<tr><td>Claude, Drive</td><td>claude.ai → Settings → Connectors → Google Drive. Read <code>START-HERE.md</code> by its file id. Write with <code>create_file</code>: <code>parentId</code> = the <code>0-inbox</code> folder id, a title ending <code>.md</code>, <code>contentMimeType text/markdown</code>, <code>disableConversionToGoogleType: true</code>. Put the inbox folder id in <code>config.json</code> as <code>drive_inbox_id</code> so START-HERE shows it.</td></tr>
+<tr><td>Claude, GitHub</td><td>Connectors → GitHub, select only the private repo. The GitHub app must be installed on the repo, not just authorised.</td></tr>
+<tr><td>Grok</td><td>Settings → Connectors → Google Drive (or GitHub). Writes go to <code>0-inbox/</code>.</td></tr>
+<tr><td>ChatGPT</td><td>Developer mode → custom MCP <code>https://api.githubcopilot.com/mcp/</code> with a fine-grained PAT (one repo, Contents read/write). It expires; put it on the calendar.</td></tr>
 </table>
-<p>Into each AI's custom instructions, one line: <i>"At the start of every conversation read START-HERE.md in my &lt;VAULT_NAME&gt; vault and obey it. Write only new files into 0-inbox."</i> Test with: <i>"Read START-HERE, is the sync alive?"</i> A correct answer quotes a last sync under 2 hours old.</p>
+<p>Paste the matching block from <code>templates/ai-instructions.md</code> into each AI's custom instructions. Each block only points at START-HERE, so it never needs updating. Test with <i>"Read START-HERE, is the sync alive?"</i>: a correct answer quotes a last sync under 2 hours old.</p>
 
-<h3>Phase H: The daily reconcile and a doctor</h3>
+<h3>Phase I: The daily reconcile and the doctor</h3>
 <ol>
-<li>A daily Claude Code scheduled task: health check first (heartbeat, relay log, pause, git in sync via <code>ls-remote</code>, held deletes, conflict copies). Exit early if the inbox is empty. Otherwise touch <code>PAUSE</code>, repair malformed inbox notes (frontmatter on line 1, slug-first name), file each one into the right department note, apply appends, handoffs, memory and warnings, move processed notes to <code>9-system/inbox-done/YYYY-MM/</code>, append one run row, remove <code>PAUSE</code>.</li>
-<li>A local skill <code>~/.claude/skills/vault-doctor/SKILL.md</code> that knows the exact paths and checks the same things plus <code>git fsck</code> (a damaged shadow is re-cloned, never hand-repaired) and that the tree pass reports zero changes.</li>
+<li>Fill the paths in <code>templates/reconcile-task.md</code> and create it as a daily Claude Code scheduled task. It checks health first, exits early when the inbox is empty, otherwise pauses the relay, repairs and files each inbox note, applies appends, handoffs, memory and warnings, moves processed notes to <code>9-system/inbox-done/</code>, writes one run row, and un-pauses.</li>
+<li>Fill the paths in <code>templates/vault-doctor-SKILL.md</code> and install it as <code>~/.claude/skills/vault-doctor/SKILL.md</code>.</li>
+</ol>
+
+<h2>🌳 The structure</h2>
+<pre>&lt;home_note&gt;.md      home: names the ten hubs, links none of them
+START-HERE.md       AI boot page (generated): trust line, rules in short, live handoff, map
+INDEX.md            one line per note with its summary (generated)
+0-inbox/            the ONLY folder AIs create files in (hub INBOX.md)
+1-me/ … 8-builds/   your eight branches, each with an UPPERCASE hub
+9-system/           the law, warnings, handoff, runs, state (machine owned)
+&lt;branch&gt;/data/      raw data, read only (hub &lt;HUB&gt;-DATA.md)</pre>
+<ol>
+<li><b>Names.</b> Every note's filename starts with its branch word (<code>me-</code>, <code>work-</code>, <code>biz-</code>, <code>money-</code>, <code>home-</code>, <code>life-</code>, <code>rel-</code>, <code>build-</code>, <code>sys-</code>) and is unique across the vault. AIs write inbox notes as <code>&lt;slug&gt;-&lt;agent&gt;-&lt;surface&gt;-YYYY-MM-DD-HHMM.md</code>; the relay strips the stamp to <code>&lt;slug&gt;.md</code> (adding <code>-2</code> if taken) and logs it in RENAMES. Agent, surface and time stay in the frontmatter. Plain ASCII everywhere.</li>
+<li><b>UPPERCASE files are generated</b> (hubs, boards, START-HERE, INDEX). Nobody edits them; the build rewrites them.</li>
+<li><b>Raw data is never reworded.</b> Statements, logs, transcripts and contact lists live in <code>data/</code> and are only moved or appended to.</li>
+<li><b>Every prose note:</b> frontmatter (title, summary under 90 characters, status, updated, and <code>parent:</code> or <code>children:</code> when used), the line <code>↑ [[PARENT]]</code>, a <code>## TL;DR</code> of numbered lines saying the objective and where it stands, short numbered sections, and a closing <code>Related:</code> line naming notes in backticks.</li>
+<li><b>Ten stars, one parent each.</b> Each branch hub is the centre of its own star. A note's parent is its hub, or the same-branch note named in <code>parent:</code>. A data file's parent is its data hub, or the note that lists it in <code>children: [a, b]</code> (data can't carry a <code>parent:</code> line, so the note adopts it and the build adds any missing link). A data file named as a parent (a log) hangs straight off the branch hub. A warning's parent is the note in its <code>about:</code>. A link survives only between a node and its parent; every other link becomes plain text (data and warnings keep exactly the words a reader saw, prose notes keep the name in backticks). Each hub lists the whole nesting as plain text, so AIs lose nothing. To tidy a crowded star, add <code>parent:</code> lines, never a second link.</li>
+<li><b>Warnings.</b> One file per warning in <code>9-system/warnings/</code>, named <code>P1|P2-&lt;slug&gt;-wNNN.md</code> (P1 needs the human, P2 is watched). Frontmatter has <code>about: &lt;note&gt;</code>, and the only link is the first body line <code>⚠️ [[&lt;note&gt;]]</code>. The board <code>WARNINGS.md</code> lists them all. A warning gains at most one dated line per day, and only when something changed.</li>
+<li><b>The law</b>, <code>9-system/sys-law.md</code>, is what every AI obeys; START-HERE carries it in short. Core rules: write only new files in <code>0-inbox</code>, never edit a file you did not create, memory on both sides (the AI's own memory and the vault), never reword data, one parent one link, and who wins a disagreement (the human's word, then documents, then AI observations, then AI inferences).</li>
+</ol>
+
+<h2>🛡️ What the relay guards against</h2>
+<ol>
+<li>A lock (stale after 9 min), a <code>PAUSE</code> file (honoured for 33 min), the vault-id sentinel, online-only placeholders, under 9 GB free disk, and a quiet window (skip while a note changed in the last 21 s, ignoring the relay's own write-backs).</li>
+<li>More than 33 changed files at once writes <code>PAUSE</code> and waits for the human.</li>
+<li>A file missing from Drive is held in git and listed, never deleted, until the human confirms. A deletion arriving from GitHub is refused and restored.</li>
+<li>A clash keeps Drive's version and parks GitHub's copy in <code>9-system/conflicts/</code>.</li>
+<li>Write-backs into Drive happen in place (Drive keeps file IDs and history) and after a backup. A file Drive changed during the cycle is skipped; Drive wins next cycle.</li>
+<li>Google Docs (<code>.gdoc</code>) that land in the vault are moved to <code>Files/_quarantine</code>.</li>
+<li>A heartbeat (<code>9-system/state/HEARTBEAT.md</code>) is rewritten when warnings change or every 54 min, and one JSON log line is written per cycle that did something.</li>
 </ol>
 
 <h3>⚠️ Gotchas learned the hard way</h3>
 <table>
 <tr><th>Symptom</th><th>Cause → Fix</th></tr>
-<tr><td>launchd job cannot read the vault, manual run works</td><td>TCC → Full Disk Access for <code>/bin/zsh</code></td></tr>
-<tr><td>Relay reads empty or tiny files from Drive</td><td>Online-only placeholders → set <code>1-Vault</code> Available offline; guard on <code>find -flags +dataless</code></td></tr>
+<tr><td>launchd job cannot read the vault, manual run works</td><td>TCC → Full Disk Access for <code>/bin/zsh</code> and <code>/usr/bin/python3</code></td></tr>
+<tr><td>Relay reads empty or tiny files from Drive</td><td>Online-only placeholders → set the folder Available offline; the relay guards on <code>find -flags +dataless</code></td></tr>
+<tr><td>Relay ran but did nothing, no log line</td><td>Quiet window: a note changed in the last 21 s → wait and run again</td></tr>
+<tr><td>First run pauses itself</td><td>Over 33 new files → run once with <code>--actor migration</code></td></tr>
 <tr><td>An AI's note arrives as a Google Doc</td><td>Conversion on upload → <code>disableConversionToGoogleType: true</code>; the relay quarantines <code>.gdoc</code></td></tr>
 <tr><td>Two identical notes in the inbox</td><td>Drive allows duplicate titles → never retry a create that succeeded</td></tr>
-<tr><td>Relay skips every other cycle</td><td>Its own write-back looked like a fresh edit → record the mtime of your own writes and ignore it</td></tr>
+<tr><td>Relay skips every other cycle</td><td>Its own write-back looked like a fresh edit → the relay records its own write mtime and ignores it</td></tr>
 <tr><td>Shell path breaks at <code>$~</code></td><td>Double quotes expand it → single quotes, or Python</td></tr>
 <tr><td>A table breaks after relinking</td><td>A <code>|</code> alias inside a table cell → write <code>\|</code> on table lines</td></tr>
-<tr><td>Graph turns into a hairball</td><td>Cross-department links → the tree pass in every build; names in backticks instead</td></tr>
+<tr><td>Graph turns into a hairball</td><td>Cross-branch links or a home note that links every hub → the tree pass in every build, ten separate stars, <code>parent:</code> lines for crowded stars</td></tr>
+<tr><td>Warnings take over the graph</td><td>Bright warning colour → darkest grey, darker than data</td></tr>
 <tr><td>Warnings file grows without end</td><td>One ledger appended every run → one file per warning, at most one dated line a day</td></tr>
+<tr><td>A push "looked fine" but never landed</td><td>Checked with <code>fetch</code> → confirm with <code>git ls-remote</code></td></tr>
 <tr><td>Agent's <code>gh</code> is logged out after login</td><td>Keychain invisible to the sandbox → <code>gh auth login --insecure-storage</code></td></tr>
-<tr><td>[iCloud] Note committed as a stub</td><td>Evicted by iCloud → stub guard, Keep Downloaded, 10 GB free</td></tr>
-<tr><td>[iCloud] "Meeting 2.md" duplicates</td><td>iCloud conflict copies → diff, keep the richer one</td></tr>
-<tr><td>Same accented filename twice</td><td>NFC/NFD → <code>core.precomposeunicode true</code> and ASCII names</td></tr>
+<tr><td>Same accented filename twice</td><td>NFC/NFD → ASCII names</td></tr>
 <tr><td>No <code>timeout</code> command on the Mac</td><td>macOS lacks it → timeouts inside Python, or git's <code>http.lowSpeedTime</code></td></tr>
 </table>
 
 <footer>
-<b>Obsidian as a 2nd Brain</b> · Setup v4.0 · Drive master, ten-department tree · verified end-to-end on macOS, September 2026<br>
-v3.6 (iCloud master, star graph) stays in this repo's history.<br>
+<b>Obsidian as a 2nd Brain</b> · Setup v5.0 · Drive master, ten stars, the live engine · verified end-to-end on macOS, October 2026<br>
+Repo: <a href="https://github.com/jkelvin-com/Oaa2B">github.com/jkelvin-com/Oaa2B</a> · v3.6 (iCloud master) and v4.0 stay in its history.<br>
 Credits: 富源承忠 <a href="https://jkelvin.com">jKelvin.com</a> · Built and battle-tested with Claude Code · Share freely 🧠
 </footer>
 </body>

@@ -1,0 +1,31 @@
+{
+  "vault": "~/Library/CloudStorage/GoogleDrive-you@gmail.com/My Drive/brain/Vault",
+  "quarantine": "~/Library/CloudStorage/GoogleDrive-you@gmail.com/My Drive/brain/Files/_quarantine",
+  "shadow": "~/Brain-relay/tree",
+  "state": "~/Brain-relay/state",
+  "backups": "~/BrainBackups",
+  "log": "~/Library/Logs/brain/relay.log",
+  "view": "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/Brain",
+  "memory_src": "",
+  "branch": "main",
+  "github_repo": "your-user/brain",
+  "drive_inbox_id": "",
+  "home_note": "home",
+  "human": "you",
+  "persona": "",
+  "rules": [
+    "Reply in numbered items. Concise. No preamble."
+  ],
+  "branches": [
+    ["0-inbox", "INBOX", "📥", "FF8C00", "New notes from every AI, waiting to be filed"],
+    ["1-me", "ME", "🪪", "2E86DE", "Who I am, my identities, and how the AIs talk to me"],
+    ["2-work", "WORK", "🎧", "00B8A9", "The job, shifts, study, career"],
+    ["3-business", "BUSINESS", "🏢", "9B59B6", "Ventures, clients and side projects"],
+    ["4-money", "MONEY", "💰", "C79A00", "Cash flow, debt, and every statement"],
+    ["5-home", "HOME", "🏡", "2ECC40", "The home: utilities, layout, kitchen, the home log"],
+    ["6-life", "LIFE", "🌿", "5856D6", "Days, health, journal, trips, gear and play"],
+    ["7-relationship", "RELATIONSHIP", "💐", "FF6FB5", "The people close to me"],
+    ["8-builds", "BUILDS", "🛠️", "00A5BB", "Code, plugins, automations, and this system as a project"],
+    ["9-system", "SYSTEM", "⚙️", "8E8E93", "Machine owned: the law, warnings, runs, handoff, mirrors"]
+  ]
+}
