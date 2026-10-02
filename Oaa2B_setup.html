@@ -48,7 +48,7 @@ table{border-collapse:collapse;width:100%} td,th{border:1px solid var(--dim);pad
 <h2>👤 Human prerequisites, do these first</h2>
 <div class="card">
 <ol>
-<li><b>A Mac that stays on.</b> It is the sync relay. The lid may be closed on power and the screen may lock, but the system must not sleep.</li>
+<li><b>A Mac or Windows PC that stays on.</b> It is the sync relay. The lid may be closed on power and the screen may lock, but the system must not sleep. Windows differences are in the <a href="#windows">macOS and Windows</a> table.</li>
 <li><a href="https://www.google.com/drive/download/">Google Drive for Desktop</a> installed and signed in.</li>
 <li><b>Obsidian</b> on the Mac (<a href="https://obsidian.md">obsidian.md</a>) and on your iPhone/iPad, with iCloud Drive on (that's where the graph view lives).</li>
 <li><b>A GitHub account</b>, free is fine: <a href="https://github.com/signup">github.com/signup</a>.</li>
@@ -71,6 +71,24 @@ table{border-collapse:collapse;width:100%} td,th{border:1px solid var(--dim);pad
 <h2>🤖 AI-RUNBOOK <span class="dim">(instructions for the AI agent executing this setup)</span></h2>
 
 <div class="card warn"><b>Agent, read first:</b> do the phases in order and check each step's output before moving on. Ask the human only the interview questions, and whenever an action needs their hands (browser logins, System Settings, Finder, <code>sudo</code>). Never store secrets in files you commit. Never run git inside Google Drive or iCloud. If a step fails, find the cause before retrying; the Gotchas table at the end lists the known traps.</div>
+
+<h3 id="windows">🪟 macOS and Windows</h3>
+<p>One engine runs on both; <code>engine/oaa2b_platform.py</code> holds the OS-specific parts. On Windows, follow every phase below with the Windows column wherever a step differs.</p>
+<table>
+<tr><th>Step</th><th>macOS</th><th>Windows</th></tr>
+<tr><td>Python</td><td><code>/usr/bin/python3</code></td><td><code>python</code> (3.9 or later, e.g. <code>winget install Python.Python.3.12</code>); also <code>winget install Git.Git GitHub.cli</code></td></tr>
+<tr><td>Config template</td><td><code>config.example.json</code></td><td><code>config.example.windows.json</code>; write paths with forward slashes</td></tr>
+<tr><td>Drive vault path</td><td><code>~/Library/CloudStorage/GoogleDrive-&lt;account&gt;/My Drive/&lt;ROOT&gt;/Vault</code></td><td><code>G:/My Drive/&lt;ROOT&gt;/Vault</code> (the letter Drive for Desktop shows in Explorer)</td></tr>
+<tr><td>Available offline</td><td>Finder → right-click <code>&lt;ROOT&gt;</code> → Offline access</td><td>Explorer → right-click <code>&lt;ROOT&gt;</code> → Offline access → Available offline</td></tr>
+<tr><td>Placeholder guard</td><td><code>find -flags +dataless</code></td><td>file attributes Offline / Recall-on-open / Recall-on-data-access</td></tr>
+<tr><td>Line endings</td><td colspan="2">The engine writes UTF-8 with LF on both; <code>oaa2b_init.py</code> sets <code>core.autocrlf false</code> in the shadow clone</td></tr>
+<tr><td>GitHub login</td><td><code>gh auth login</code></td><td><code>gh auth login</code>, then <code>gh auth setup-git</code> so the relay can push without a prompt</td></tr>
+<tr><td>Run it forever (Phase F)</td><td>launchd plists, <code>--launchd &lt;LABEL&gt;</code></td><td>Not automated in this version: run <code>python oaa2b_relay.py</code> by hand</td></tr>
+<tr><td>Privacy permission</td><td>Full Disk Access for <code>/bin/zsh</code> and <code>/usr/bin/python3</code></td><td>None needed</td></tr>
+<tr><td>Keep awake</td><td><code>sudo pmset -a sleep 0</code></td><td>Settings → System → Power → Sleep: Never, or <code>powercfg /change standby-timeout-ac 0</code></td></tr>
+<tr><td>Graph view (Phase G)</td><td>iCloud: <code>~/Library/Mobile Documents/iCloud~md~obsidian/Documents/&lt;VAULT_NAME&gt;</code></td><td>iCloud for Windows: <code>~/iCloudDrive/iCloud~md~obsidian/&lt;VAULT_NAME&gt;</code>. Or leave <code>view</code> empty and open the Drive <code>Vault</code> folder in Obsidian directly</td></tr>
+<tr><td>Path length</td><td>No limit to mind</td><td>Keep the shadow, state and backups folders short (<code>~/&lt;VAULT_NAME&gt;-relay</code>); Windows stops at 260 characters</td></tr>
+</table>
 
 <h3>Phase 0: Interview the human</h3>
 <p>Ask for these values, confirm them back, and use them everywhere below. They go into <code>engine/config.json</code>.</p>
@@ -202,6 +220,10 @@ INDEX.md            one line per note with its summary (generated)
 <tr><td>Agent's <code>gh</code> is logged out after login</td><td>Keychain invisible to the sandbox → <code>gh auth login --insecure-storage</code></td></tr>
 <tr><td>Same accented filename twice</td><td>NFC/NFD → ASCII names</td></tr>
 <tr><td>No <code>timeout</code> command on the Mac</td><td>macOS lacks it → timeouts inside Python, or git's <code>http.lowSpeedTime</code></td></tr>
+<tr><td>Windows: <code>UnicodeDecodeError</code> or garbled emoji in hubs</td><td>Windows defaults to cp1252 → the engine opens every file as UTF-8</td></tr>
+<tr><td>Windows: every note shows as changed</td><td>CRLF conversion → the engine writes LF and the shadow has <code>core.autocrlf false</code></td></tr>
+<tr><td>Windows: <code>desktop.ini</code> appears in the vault</td><td>Explorer writes it → the relay skips <code>desktop.ini</code> and <code>Thumbs.db</code></td></tr>
+<tr><td>Windows: <code>The filename or extension is too long</code></td><td>260-character path limit → short shadow, state and backups paths</td></tr>
 </table>
 
 <footer>

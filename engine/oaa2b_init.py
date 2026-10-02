@@ -7,17 +7,19 @@
   * seeds the law (9-system/sys-law.md), the live handoff and an empty RENAMES board
   * writes the same random vault-id into the vault and into the relay's state folder
     (the relay refuses to sync if they differ, so it can never sync the wrong folder)
-  * writes .gitignore and .gitattributes into the shadow clone if it exists
+  * writes .gitignore and .gitattributes into the shadow clone if it exists, and sets core.autocrlf false there
   * --launchd com.you.brain writes the two LaunchAgent plists (relay 36 s, view 180 s) into
     ~/Library/LaunchAgents, without loading them; load them with launchctl when ready
 """
 import secrets
+import subprocess
 import sys
 from datetime import date
 from pathlib import Path
 
 ENGINE = Path(__file__).resolve().parent
 sys.path.insert(0, str(ENGINE))
+import oaa2b_platform as plat  # noqa: E402
 import oaa2b_vault as vt  # noqa: E402
 
 TEMPLATES = ENGINE.parent / "templates"
@@ -28,7 +30,7 @@ def seed(path, text):
         print("kept   ", path)
         return
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
+    plat.write_text(path, text)
     print("created", path)
 
 
@@ -77,17 +79,21 @@ def main():
     vid_vault, vid_state = vault / "9-system/state/vault-id", state / "vault-id"
     if not vid_vault.exists() and not vid_state.exists():
         vid = secrets.token_hex(12)
-        vid_vault.write_text(vid + "\n", encoding="utf-8")
-        vid_state.write_text(vid + "\n", encoding="utf-8")
+        plat.write_text(vid_vault, vid + "\n")
+        plat.write_text(vid_state, vid + "\n")
         print("created vault-id", vid)
-    elif vid_vault.exists() and vid_state.exists() and vid_vault.read_text(encoding="utf-8") == vid_state.read_text(encoding="utf-8"):
+    elif (vid_vault.exists() and vid_state.exists()
+          and vid_vault.read_text(encoding="utf-8") == vid_state.read_text(encoding="utf-8")):
         print("kept    vault-id")
     else:
         print("WARNING vault-id exists on one side only or differs; fix by hand before running the relay")
 
     if shadow.exists():
-        seed(shadow / ".gitignore", ".DS_Store\n.obsidian/workspace*.json\n.obsidian/cache\n.trash/\n*.tmp\n*.swp\n*.icloud\n")
+        seed(shadow / ".gitignore", ".DS_Store\ndesktop.ini\nThumbs.db\n.obsidian/workspace*.json\n.obsidian/cache\n"
+                                    ".trash/\n*.tmp\n*.swp\n*.icloud\n")
         seed(shadow / ".gitattributes", "*.md merge=binary\n")  # a clash never writes conflict markers into a note
+        # line endings are never a change: the engine writes LF everywhere, git must not convert them
+        subprocess.run(["git", "-C", str(shadow), "config", "core.autocrlf", "false"], check=False)
 
     if "--launchd" in sys.argv:
         prefix = sys.argv[sys.argv.index("--launchd") + 1]

@@ -255,7 +255,7 @@ def enforce(vault, dry=False):
                 continue
         changed.append(rel)
         if not dry:
-            p.write_text(new, encoding="utf-8")
+            cm.plat.write_text(p, new)
     return changed, refused
 
 

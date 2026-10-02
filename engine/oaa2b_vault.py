@@ -9,7 +9,11 @@ Python 3.9 standard library only.
 import json
 import os
 import re
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import oaa2b_platform as plat  # noqa: E402
 
 ENGINE = Path(__file__).resolve().parent
 CFG_PATH = Path(os.environ.get("OAA2B_CONFIG", str(ENGINE / "config.json")))
@@ -90,7 +94,7 @@ def write_if_changed(path, text):
     if path.exists() and path.read_text(encoding="utf-8", errors="replace") == text:
         return False
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
+    plat.write_text(path, text)
     return True
 
 

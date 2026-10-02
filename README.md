@@ -19,8 +19,8 @@ v5 ships the actual code that runs the author's own vault every day, with person
 
 📦 Repo: [github.com/jkelvin-com/Oaa2B](https://github.com/jkelvin-com/Oaa2B) · full runbook: [Oaa2B_setup.html](Oaa2B_setup.html)
 
-1. **Prerequisites:** a Mac that stays on, Google Drive for Desktop, Obsidian on Mac and phone (iCloud Drive on), a GitHub account, [Claude Code](https://claude.com/claude-code).
-2. **Paste this into Claude Code on your Mac:**
+1. **Prerequisites:** a Mac or Windows PC that stays on, Google Drive for Desktop, Obsidian on the computer and phone (iCloud Drive on), a GitHub account, [Claude Code](https://claude.com/claude-code). On Windows, see the runbook's *macOS and Windows* table.
+2. **Paste this into Claude Code on that computer:**
 
    ```
    Fetch https://raw.githubusercontent.com/jKelvin-com/Oaa2B/main/Oaa2B_setup.html and follow its AI-RUNBOOK section to set up "Obsidian as a 2nd Brain" for me.
@@ -33,7 +33,7 @@ v5 ships the actual code that runs the author's own vault every day, with person
 
 ```
 Oaa2B_setup.html        the runbook (human steps + AI-RUNBOOK)
-engine/                 relay, tree, build, view, init, vault helpers, config.example.json
+engine/                 relay, tree, build, view, init, vault and platform helpers, config.example(.windows).json
 templates/              sys-law, HANDOFF, vault-doctor skill, reconcile task, AI instructions
 ```
 
