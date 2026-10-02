@@ -49,7 +49,7 @@ def files(root):
 
 def log(**kw):
     kw["t"] = datetime.now().astimezone().isoformat(timespec="seconds")
-    with LOG.open("a") as fh:
+    with LOG.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(kw, ensure_ascii=False) + "\n")
 
 
@@ -57,9 +57,9 @@ def merge_graph():
     src = SHADOW / "9-system/obsidian/graph.json"
     if not src.exists():
         return
-    want = json.loads(src.read_text())
+    want = json.loads(src.read_text(encoding="utf-8"))
     dst = VIEW / ".obsidian/graph.json"
-    have = json.loads(dst.read_text()) if dst.exists() else {}
+    have = json.loads(dst.read_text(encoding="utf-8")) if dst.exists() else {}
     changed = False
     for key in ("colorGroups", "search", "showTags"):
         if key in want and have.get(key) != want[key]:
@@ -67,21 +67,21 @@ def merge_graph():
             changed = True
     if changed:
         dst.parent.mkdir(parents=True, exist_ok=True)
-        dst.write_text(json.dumps(have, indent=2))
+        dst.write_text(json.dumps(have, indent=2), encoding="utf-8")
 
 
 def main():
     head_file = STATE / "last-head"
     seen_file = STATE / "last-view-head"
-    head = head_file.read_text().strip() if head_file.exists() else ""
-    if "--force" not in sys.argv and seen_file.exists() and seen_file.read_text().strip() == head:
+    head = head_file.read_text(encoding="utf-8").strip() if head_file.exists() else ""
+    if "--force" not in sys.argv and seen_file.exists() and seen_file.read_text(encoding="utf-8").strip() == head:
         return
     if not VIEW.exists() or not SHADOW.exists():
         log(event="blocked", reason="view or shadow folder missing")
         return
     src, dst = files(SHADOW), files(VIEW)
     manifest_path = STATE / "view-manifest.json"
-    manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {}
     wrote = removed = rescued = 0
     for rel, p in src.items():
         target = VIEW / rel
@@ -125,8 +125,8 @@ def main():
         except OSError:
             pass
     merge_graph()
-    manifest_path.write_text(json.dumps(manifest))
-    seen_file.write_text(head)
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    seen_file.write_text(head, encoding="utf-8")
     if wrote or removed or rescued:
         log(event="export", wrote=wrote, removed=removed, rescued=rescued, head=head[:9])
 

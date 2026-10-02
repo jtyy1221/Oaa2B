@@ -28,7 +28,7 @@ def seed(path, text):
         print("kept   ", path)
         return
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text)
+    path.write_text(text, encoding="utf-8")
     print("created", path)
 
 
@@ -69,18 +69,18 @@ def main():
         (vault / b[0]).mkdir(parents=True, exist_ok=True)
     for sub in ("state", "handoff/history", "warnings", "renames", "runs"):
         (vault / "9-system" / sub).mkdir(parents=True, exist_ok=True)
-    seed(vault / "9-system/sys-law.md", fill((TEMPLATES / "sys-law.md").read_text()))
-    seed(vault / "9-system/handoff/HANDOFF.md", (TEMPLATES / "HANDOFF.md").read_text())
+    seed(vault / "9-system/sys-law.md", fill((TEMPLATES / "sys-law.md").read_text(encoding="utf-8")))
+    seed(vault / "9-system/handoff/HANDOFF.md", (TEMPLATES / "HANDOFF.md").read_text(encoding="utf-8"))
     seed(vault / "9-system/renames/RENAMES.md", "---\ntitle: RENAMES\nkind: board\n---\n↑ [[SYSTEM]]\n\n# RENAMES\n\n")
 
     state.mkdir(parents=True, exist_ok=True)
     vid_vault, vid_state = vault / "9-system/state/vault-id", state / "vault-id"
     if not vid_vault.exists() and not vid_state.exists():
         vid = secrets.token_hex(12)
-        vid_vault.write_text(vid + "\n")
-        vid_state.write_text(vid + "\n")
+        vid_vault.write_text(vid + "\n", encoding="utf-8")
+        vid_state.write_text(vid + "\n", encoding="utf-8")
         print("created vault-id", vid)
-    elif vid_vault.exists() and vid_state.exists() and vid_vault.read_text() == vid_state.read_text():
+    elif vid_vault.exists() and vid_state.exists() and vid_vault.read_text(encoding="utf-8") == vid_state.read_text(encoding="utf-8"):
         print("kept    vault-id")
     else:
         print("WARNING vault-id exists on one side only or differs; fix by hand before running the relay")

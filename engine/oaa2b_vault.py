@@ -13,7 +13,7 @@ from pathlib import Path
 
 ENGINE = Path(__file__).resolve().parent
 CFG_PATH = Path(os.environ.get("OAA2B_CONFIG", str(ENGINE / "config.json")))
-CFG = json.loads(CFG_PATH.read_text()) if CFG_PATH.exists() else {}
+CFG = json.loads(CFG_PATH.read_text(encoding="utf-8")) if CFG_PATH.exists() else {}
 
 
 def cfg_path(key, default=""):
@@ -70,7 +70,7 @@ def front(text):
 
 
 def summary_of(path):
-    text = path.read_text(errors="replace")
+    text = path.read_text(encoding="utf-8", errors="replace")
     meta, body = front(text)
     for key in ("summary", "description"):
         if meta.get(key):
@@ -87,10 +87,10 @@ def summary_of(path):
 
 def write_if_changed(path, text):
     path = Path(path)
-    if path.exists() and path.read_text(errors="replace") == text:
+    if path.exists() and path.read_text(encoding="utf-8", errors="replace") == text:
         return False
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text)
+    path.write_text(text, encoding="utf-8")
     return True
 
 
@@ -104,7 +104,7 @@ def hub_name(folder):
 def load_warnings(vault):
     made = []
     for p in sorted((Path(vault) / "9-system/warnings").glob("P[12]-*.md")):
-        text = p.read_text(errors="replace")
+        text = p.read_text(encoding="utf-8", errors="replace")
         meta, _ = front(text)
         num = int(meta.get("warning", "0") or 0)
         title = re.sub(r"^W-\d+\s*", "", meta.get("title", p.stem))
@@ -272,11 +272,11 @@ def start_here(out, warnings_made):
     hf = out / "9-system/handoff/HANDOFF.md"
     handoff_body = ""
     if hf.exists():
-        _, handoff_body = front(hf.read_text())
+        _, handoff_body = front(hf.read_text(encoding="utf-8"))
         handoff_body = re.sub(r"^↑ \[\[[^\]]+\]\]\s*\n", "", handoff_body.strip())
         handoff_body = re.sub(r"^# .*\n", "", handoff_body).strip()
     hb = out / "9-system/state/HEARTBEAT.md"
-    m = re.search(r"last_sync: (.+)", hb.read_text()) if hb.exists() else None
+    m = re.search(r"last_sync: (.+)", hb.read_text(encoding="utf-8")) if hb.exists() else None
     beat = m.group(1) if m else "unknown"
     p1 = [w for w in warnings_made if w[0] == "P1"]
     lines = ["---", "title: START-HERE", "kind: board", "---", "# 🧭 START-HERE", "",

@@ -69,7 +69,7 @@ NOW = datetime.now().astimezone()
 def log(event, **kw):
     LOG.parent.mkdir(parents=True, exist_ok=True)
     kw.update(t=NOW.isoformat(timespec="seconds"), event=event, actor=ACTOR)
-    with LOG.open("a") as fh:
+    with LOG.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(kw, ensure_ascii=False) + "\n")
     if LOG.stat().st_size > 3 * 1024 * 1024:
         LOG.rename(LOG.with_suffix(f".{STAMP}.log"))
@@ -140,7 +140,7 @@ def slug_of(path):
     if not m:
         return None
     base = m.group("base")
-    meta = dict(re.findall(r"^(agent|surface):\s*(\S+)\s*$", path.read_text(errors="replace")[:1500], re.M))
+    meta = dict(re.findall(r"^(agent|surface):\s*(\S+)\s*$", path.read_text(encoding="utf-8", errors="replace")[:1500], re.M))
     surface, agent = meta.get("surface", "").strip("\"'"), meta.get("agent", "").strip("\"'")
     toks = base.split("-")
     if surface and base.endswith("-" + surface):
@@ -178,11 +178,11 @@ def strip_stamps():
             renames.append((old_rel, new_rel))
     if renames:
         rn = SHADOW / "9-system/renames/RENAMES.md"
-        text = rn.read_text() if rn.exists() else "# RENAMES\n\n"
+        text = rn.read_text(encoding="utf-8") if rn.exists() else "# RENAMES\n\n"
         num = len(re.findall(r"^\d+\. ", text, re.M))
         add = "".join(f"{num + i}. `{o}` → `{n}` · stamp stripped {NOW.strftime('%Y-%m-%d %H:%M')}\n" for i, (o, n) in enumerate(renames, 1))
         rn.parent.mkdir(parents=True, exist_ok=True)
-        rn.write_text(text.rstrip("\n") + "\n" + add)
+        rn.write_text(text.rstrip("\n") + "\n" + add, encoding="utf-8")
         log("stamps-stripped", paths=[n for _, n in renames])
 
 
@@ -191,7 +191,7 @@ def guards():
         return "Drive vault folder not found; is Google Drive running and signed in?"
     sentinel = VAULT / "9-system/state/vault-id"
     mine = STATE / "vault-id"
-    if not sentinel.exists() or not mine.exists() or sentinel.read_text().strip() != mine.read_text().strip():
+    if not sentinel.exists() or not mine.exists() or sentinel.read_text(encoding="utf-8").strip() != mine.read_text(encoding="utf-8").strip():
         return "vault-id sentinel missing or different; refusing to sync the wrong folder"
     free = shutil.disk_usage(str(HOME)).free / 1e9
     if free < MIN_FREE_GB:
@@ -201,7 +201,7 @@ def guards():
         return "some Drive files are online-only placeholders; mark the vault folder Available offline"
     newest = max((p.stat().st_mtime for p in VAULT.rglob("*.md")), default=0)
     own = STATE / "own-write-mtime"  # the relay's own write-backs don't count as someone typing
-    own_t = float(own.read_text()) if own.exists() else 0.0
+    own_t = float(own.read_text(encoding="utf-8")) if own.exists() else 0.0
     if newest > own_t + 1 and time.time() - newest < QUIET_SECONDS:
         return "quiet"  # someone is writing right now; try next cycle
     if (SHADOW / ".git/MERGE_HEAD").exists():
@@ -276,8 +276,8 @@ def cycle():
             shutil.copy2(VAULT / rel, dst)
     pend = STATE / "pending-deletes.tsv"
     pend_text = "".join(f"{r}\n" for r in missing)
-    held_changed = not pend.exists() or pend.read_text() != pend_text
-    pend.write_text(pend_text)
+    held_changed = not pend.exists() or pend.read_text(encoding="utf-8") != pend_text
+    pend.write_text(pend_text, encoding="utf-8")
 
     # 2. Claude Code memory mirror (script-owned, deletions mirrored)
     mem_dst = SHADOW / "9-system/claude-code-memory"
@@ -360,7 +360,7 @@ def cycle():
             write_in_place(p, in_drive)
         wrote.append(rel)
     if wrote and not DRY:
-        (STATE / "own-write-mtime").write_text(str(max((VAULT / r).stat().st_mtime for r in wrote if (VAULT / r).exists())))
+        (STATE / "own-write-mtime").write_text(str(max((VAULT / r).stat().st_mtime for r in wrote if (VAULT / r).exists())), encoding="utf-8")
     # script-owned folders mirror deletions into Drive too
     for rel, p in listing(VAULT).items():
         if rel.startswith(SCRIPT_OWNED) and not (SHADOW / rel).exists() and not DRY:
@@ -374,7 +374,7 @@ def cycle():
         pushed = r.returncode == 0
         if not pushed:
             log("push-failed", error=r.stderr.strip()[:300])
-    (STATE / "last-head").write_text(git("rev-parse", "HEAD"))
+    (STATE / "last-head").write_text(git("rev-parse", "HEAD"), encoding="utf-8")
     if changed or wrote or conflicts or held_changed:
         log("cycle", from_drive=len(changed), to_drive=len(wrote), conflicts=len(conflicts),
             held_deletes=len(missing), pushed=pushed, sample_in=changed[:5], sample_out=wrote[:5])
@@ -392,27 +392,27 @@ def heartbeat(warnings, force=True):
     if DRY or not VAULT.is_dir():
         return  # never mkdir a stub vault at a stale path
     hb = VAULT / "9-system/state/HEARTBEAT.md"
-    if hb.exists() and "not yet" not in hb.read_text(errors="replace") and time.time() - hb.stat().st_mtime < 54 * 60:
-        same_warning = f"warnings: {warnings}\n" in hb.read_text(errors="replace")
+    if hb.exists() and "not yet" not in hb.read_text(encoding="utf-8", errors="replace") and time.time() - hb.stat().st_mtime < 54 * 60:
+        same_warning = f"warnings: {warnings}\n" in hb.read_text(encoding="utf-8", errors="replace")
         if same_warning:
             return  # refresh at most every 54 min, or at once when the warning itself changes (clearing included)
     text = ("---\ntitle: HEARTBEAT\nkind: state\nrelay: mac\n"
             f"last_sync: {NOW.isoformat(timespec='seconds')}\nwarnings: {warnings}\n---\n↑ [[SYSTEM]]\n\n# HEARTBEAT\n\n"
             "1. Written by the relay. If last_sync is more than 2 hours old, the Mac is not syncing.\n")
     try:
-        if hb.exists() and hb.read_text() == text:
+        if hb.exists() and hb.read_text(encoding="utf-8") == text:
             return
         hb.parent.mkdir(parents=True, exist_ok=True)
         write_in_place_text(hb, text)
-        (STATE / "own-write-mtime").write_text(str(max(hb.stat().st_mtime, float((STATE / "own-write-mtime").read_text()) if (STATE / "own-write-mtime").exists() else 0)))
+        (STATE / "own-write-mtime").write_text(str(max(hb.stat().st_mtime, float((STATE / "own-write-mtime").read_text(encoding="utf-8")) if (STATE / "own-write-mtime").exists() else 0)))
         (SHADOW / "9-system/state").mkdir(parents=True, exist_ok=True)
-        (SHADOW / "9-system/state/HEARTBEAT.md").write_text(text)
+        (SHADOW / "9-system/state/HEARTBEAT.md").write_text(text, encoding="utf-8")
     except Exception as e:
         log("heartbeat-failed", error=str(e)[:200])
 
 
 def write_in_place_text(path, text):
-    with open(path, "r+" if path.exists() else "w") as fh:
+    with open(path, "r+" if path.exists() else "w", encoding="utf-8") as fh:
         fh.seek(0)
         fh.write(text)
         fh.truncate()

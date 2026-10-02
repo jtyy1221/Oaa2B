@@ -82,7 +82,7 @@ def tree_map(vault, names=None):
             continue
         nodes.append(rel)
         if not is_data(rel):
-            metas[rel], _ = cm.front(p.read_text(errors="replace"))
+            metas[rel], _ = cm.front(p.read_text(encoding="utf-8", errors="replace"))
     want = {}
     for rel in nodes:
         meta = metas.get(rel, {})
@@ -241,7 +241,7 @@ def enforce(vault, dry=False):
         rel = p.relative_to(vault).as_posix()
         if any(x.startswith(".") for x in rel.split("/")) or not managed(rel):
             continue
-        text = p.read_text(errors="replace")
+        text = p.read_text(encoding="utf-8", errors="replace")
         new = fix_text(rel, text, names, parents)
         if new == text:
             continue
@@ -255,7 +255,7 @@ def enforce(vault, dry=False):
                 continue
         changed.append(rel)
         if not dry:
-            p.write_text(new)
+            p.write_text(new, encoding="utf-8")
     return changed, refused
 
 
